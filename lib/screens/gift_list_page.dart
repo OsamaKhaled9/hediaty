@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
 class GiftListPage extends StatelessWidget {
+  const GiftListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift List'),
+        title: const Text('Gift List'),
       ),
       body: ListView.builder(
         itemCount: 5, // Hardcoded for demo
         itemBuilder: (context, index) {
           return ListTile(
             title: Text('Gift $index'),
-            subtitle: Text('Category: Books'),
+            subtitle: const Text('Category: Books'),
             trailing: Switch(
               value: true, // Hardcoded for demo
               onChanged: (bool value) {
@@ -26,7 +28,7 @@ class GiftListPage extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, '/gift_details');
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

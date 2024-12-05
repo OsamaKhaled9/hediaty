@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CreateEventPage extends StatefulWidget {
+  const CreateEventPage({super.key});
+
   @override
   _CreateEventPageState createState() => _CreateEventPageState();
 }
@@ -14,7 +16,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Event'),
+        title: const Text('Create Event'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -24,7 +26,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
-                decoration: InputDecoration(labelText: 'Event Name'),
+                decoration: const InputDecoration(labelText: 'Event Name'),
                 onSaved: (value) => eventName = value,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -34,7 +36,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 },
               ),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Event Description'),
+                decoration: const InputDecoration(labelText: 'Event Description'),
                 onSaved: (value) => eventDescription = value,
               ),
               ElevatedButton(
@@ -46,7 +48,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                     Navigator.pop(context); // Go back to the previous page
                   }
                 },
-                child: Text('Create Event'),
+                child: const Text('Create Event'),
               ),
             ],
           ),

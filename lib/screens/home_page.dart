@@ -3,13 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:hediaty/core/models/friends.dart';
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final friends = Provider.of<Friends>(context).friends;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hedieaty - Home'),
+        title: const Text('Hedieaty - Home'),
       ),
       body: ListView.builder(
         itemCount: friends.length,
@@ -29,7 +31,7 @@ class HomePage extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, '/create_event');
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

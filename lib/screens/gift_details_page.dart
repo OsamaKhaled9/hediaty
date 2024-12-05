@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class GiftDetailsPage extends StatefulWidget {
+  const GiftDetailsPage({super.key});
+
   @override
   _GiftDetailsPageState createState() => _GiftDetailsPageState();
 }
@@ -14,7 +16,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift Details'),
+        title: const Text('Gift Details'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -24,15 +26,15 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
-                decoration: InputDecoration(labelText: 'Gift Name'),
+                decoration: const InputDecoration(labelText: 'Gift Name'),
                 onSaved: (value) => giftName = value,
               ),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Description'),
                 onSaved: (value) => giftDescription = value,
               ),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Price'),
+                decoration: const InputDecoration(labelText: 'Price'),
                 keyboardType: TextInputType.number,
                 onSaved: (value) => giftPrice = double.tryParse(value ?? '0'),
               ),
@@ -40,10 +42,10 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                 onPressed: () {
                   // Pick image
                 },
-                child: Text('Upload Image'),
+                child: const Text('Upload Image'),
               ),
               DropdownButton<String>(
-                hint: Text('Select Category'),
+                hint: const Text('Select Category'),
                 onChanged: (String? newCategory) {
                   setState(() {
                     giftCategory = newCategory;
@@ -64,7 +66,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                     // Save gift details
                   }
                 },
-                child: Text('Save Gift'),
+                child: const Text('Save Gift'),
               ),
             ],
           ),

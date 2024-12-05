@@ -9,7 +9,7 @@ class Friend {
 }
 
 class Friends extends ChangeNotifier {
-  List<Friend> _friends = [
+  final List<Friend> _friends = [
     Friend(name: 'John Doe', profilePic: 'https://via.placeholder.com/150', upcomingEvents: 1),
     Friend(name: 'Jane Smith', profilePic: 'https://via.placeholder.com/150', upcomingEvents: 0),
   ];

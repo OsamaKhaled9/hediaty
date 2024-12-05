@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 class EventListPage extends StatelessWidget {
+  const EventListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Event List'),
+        title: const Text('Event List'),
       ),
       body: ListView(
         children: [
           ListTile(
-            title: Text('Birthday Party'),
-            subtitle: Text('Status: Upcoming'),
+            title: const Text('Birthday Party'),
+            subtitle: const Text('Status: Upcoming'),
             trailing: IconButton(
-              icon: Icon(Icons.edit),
+              icon: const Icon(Icons.edit),
               onPressed: () {
                 // Navigate to edit event page
               },
@@ -26,7 +28,7 @@ class EventListPage extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, '/create_event');
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
