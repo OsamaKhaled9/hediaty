@@ -73,4 +73,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'hediaty-92c6c.firebasestorage.app',
     measurementId: 'G-47B1NQK3R4',
   );
+
 }

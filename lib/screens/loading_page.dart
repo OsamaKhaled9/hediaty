@@ -41,19 +41,19 @@ class _LoadingPageState extends State<LoadingPage> {
           children: [
             // Gift Icon with animation
             AnimatedContainer(
-              duration: Duration(seconds: 1),
+              duration: const Duration(seconds: 1),
               curve: Curves.easeInOut,
               width: 80,
               height: 80,
-              child: Icon(
+              child: const Icon(
                 Icons.card_giftcard, // Gift icon
                 size: 80,
                 color: Color(0xFF2A6BFF), // Same blue color for consistency
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Loading text below the icon
-            Text(
+            const Text(
               'Loading...',
               style: TextStyle(
                 fontSize: 18,

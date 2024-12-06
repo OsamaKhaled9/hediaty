@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
-/*import 'package:flutter_router/flutter_router.dart'; // For navigation
-import 'package:provider/provider.dart';
-import 'package:hediaty/core/models/friends.dart';
-import 'package:hediaty/screens/home_page.dart';
-import 'package:hediaty/screens/event_list_page.dart';
-import 'package:hediaty/screens/gift_list_page.dart';
-import 'package:hediaty/screens/gift_details_page.dart';
-import 'package:hediaty/screens/profile_page.dart';
-import 'package:hediaty/screens/create_event_page.dart';*/
+import 'package:firebase_core/firebase_core.dart';
+import 'package:hediaty/screens/auth/signup_page.dart';
+import 'firebase_options.dart'; // Import the file that contains Firebase options
 import 'package:hediaty/screens/loading_page.dart';
 import 'package:hediaty/screens/auth/landing_page.dart';
-import 'package:hediaty/screens/auth/signup_page.dart';
-import 'package:hediaty/screens/auth/login_page.dart';
-import 'package:firebase_core/firebase_core.dart';
-
-
-
-
 
 void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    // Initialize Firebase with the options.
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase initialized");
+  } catch (e) {
+    print("Error initializing Firebase: $e");
+  }
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -30,14 +27,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Hedieaty',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/loading',
+      title: 'Hediaty',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: '/loading', // Make sure to load the first screen
       routes: {
-        '/loading': (context) => LoadingPage(),
-        '/landing': (context) => LandingPage(),
-        '/signup': (context) => SignupPage(),
-        //'/login': (context) => LoginPage(),
+        '/loading': (context) => const LoadingPage(),
+        '/landing': (context) => LandingPage(), // Ensure this is correctly defined
+        '/signup': (context) =>SignUpPage(),
+        // Add any other routes needed here
       },
     );
   }

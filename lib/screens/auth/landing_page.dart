@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LandingPage extends StatefulWidget {
+  const LandingPage({super.key});
+
   @override
   _LandingPageState createState() => _LandingPageState();
 }
@@ -19,7 +21,7 @@ class _LandingPageState extends State<LandingPage> {
     final bool isFirstTimeUser = prefs.getBool('isFirstTimeUser') ?? true;
 
     // Simulate loading time (1 second)
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
 
     if (isFirstTimeUser) {
       prefs.setBool('isFirstTimeUser', false); // Set after first launch
@@ -29,7 +31,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF1F1F1), // Soft off-white background
+      backgroundColor: const Color(0xFFF1F1F1), // Soft off-white background
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -44,10 +46,10 @@ class _LandingPageState extends State<LandingPage> {
                   width: 180, // Slightly bigger logo for prominence
                   height: 180,
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
 
                 // App Title with elegant typography
-                Text(
+                const Text(
                   'Hedieaty',
                   style: TextStyle(
                     fontSize: 30,
@@ -56,10 +58,10 @@ class _LandingPageState extends State<LandingPage> {
                     letterSpacing: 2, // Subtle spacing for professionalism
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
 
                 // Subtitle with a professional touch
-                Text(
+                const Text(
                   'Manage your gift lists effortlessly.',
                   style: TextStyle(
                     fontSize: 18,
@@ -67,31 +69,31 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 50),
+                const SizedBox(height: 50),
 
                 // Sign Up Button (Primary Action)
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/signup');
                   },
-                  child: Text('Sign Up'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2A6BFF), // Professional blue
-                    padding: EdgeInsets.symmetric(horizontal: 60, vertical: 15),
-                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    backgroundColor: const Color(0xFF2A6BFF), // Professional blue
+                    padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30), // Rounded corners
                     ),
                     shadowColor: Colors.black.withOpacity(0.2), // Shadow for depth
                   ),
+                  child: Text('Sign Up'),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 // Login Prompt Text with Login Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Already have an account? ',
                       style: TextStyle(
                         fontSize: 16,
@@ -103,12 +105,12 @@ class _LandingPageState extends State<LandingPage> {
                         Navigator.pushReplacementNamed(context, '/login');
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Color(0xFF2A6BFF), // Same blue as the primary button
+                          color: const Color(0xFF2A6BFF), // Same blue as the primary button
                           borderRadius: BorderRadius.circular(25), // Rounded corners
                         ),
-                        child: Text(
+                        child: const Text(
                           'Login',
                           style: TextStyle(
                             fontSize: 16,
