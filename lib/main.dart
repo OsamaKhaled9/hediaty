@@ -4,6 +4,9 @@ import 'package:hediaty/screens/auth/signup_page.dart';
 import 'firebase_options.dart'; // Import the file that contains Firebase options
 import 'package:hediaty/screens/loading_page.dart';
 import 'package:hediaty/screens/auth/landing_page.dart';
+import 'package:hediaty/screens/auth/login_page.dart';
+import 'package:hediaty/screens/home_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +39,8 @@ class MyApp extends StatelessWidget {
         '/loading': (context) => const LoadingPage(),
         '/landing': (context) => LandingPage(), // Ensure this is correctly defined
         '/signup': (context) =>SignUpPage(),
-        // Add any other routes needed here
+        '/login': (context) => LoginPage(),
+        '/home': (context) => HomePage(),
       },
     );
   }

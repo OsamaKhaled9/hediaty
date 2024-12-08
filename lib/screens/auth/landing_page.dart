@@ -102,7 +102,7 @@ class _LandingPageState extends State<LandingPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacementNamed(context, '/login');
+                        Navigator.pushReplacementNamed(context, '/login'); // Corrected navigation
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
