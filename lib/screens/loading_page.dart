@@ -32,33 +32,41 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   @override
-    Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Clean white background
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Gift Icon with animation
-            AnimatedContainer(
-              duration: const Duration(seconds: 1),
-              curve: Curves.easeInOut,
-              width: 80,
-              height: 80,
-              child: const Icon(
-                Icons.card_giftcard, // Gift icon
-                size: 80,
-                color: Color(0xFF2A6BFF), // Same blue color for consistency
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Color(0xFF2A6BFF).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.card_giftcard,
+                  size: 80,
+                  color: Color(0xFF2A6BFF),
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            // Loading text below the icon
-            const Text(
-              'Loading...',
+            SizedBox(height: 20),
+            Text(
+              'Hedieaty',
               style: TextStyle(
-                fontSize: 18,
-                color: Color(0xFF7D7D7D),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2A2D3D),
+                letterSpacing: 1.5,
               ),
+            ),
+            SizedBox(height: 10),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A6BFF)),
             ),
           ],
         ),

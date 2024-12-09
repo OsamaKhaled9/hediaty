@@ -34,60 +34,103 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Login"),
-        backgroundColor: Colors.teal, // Consistent with the vibe
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF1F1F1),
+    appBar: AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
+        onPressed: () => Navigator.of(context).pop(),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.teal)),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Welcome Back',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2A2D3D),
+            ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Login to continue',
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF7D7D7D),
+            ),
+          ),
+          SizedBox(height: 30),
+          TextField(
+            controller: _emailController,
+            decoration: InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.email, color: Color(0xFF2A6BFF)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
               ),
             ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.teal)),
+          ),
+          SizedBox(height: 16),
+          TextField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              prefixIcon: Icon(Icons.lock, color: Color(0xFF2A6BFF)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              obscureText: true,
-            ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Login'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal, // Consistent with the vibe
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
-                textStyle: TextStyle(fontSize: 16),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
               ),
             ),
-            SizedBox(height: 16),
-            if (_errorMessage.isNotEmpty)
-              Text(
-                _errorMessage,
-                style: TextStyle(color: Colors.red),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _login,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2A6BFF),
+              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
-            Spacer(),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/signup');
-              },
-              child: Text('Don’t have an account? Sign up'),
             ),
-          ],
-        ),
+            child: Text(
+              'Login',
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+          SizedBox(height: 16),
+          if (_errorMessage.isNotEmpty)
+            Text(
+              _errorMessage,
+              style: TextStyle(color: Colors.red),
+            ),
+          Spacer(),
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/signup');
+            },
+            child: Text(
+              'Don\'t have an account? Sign up',
+              style: TextStyle(color: Color(0xFF2A6BFF)),
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
