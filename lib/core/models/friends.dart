@@ -1,23 +1,26 @@
-import 'package:flutter/material.dart';
-
 class Friend {
+  final String id;
   final String name;
-  final String profilePic;
-  final int upcomingEvents;
+  final String profilePictureUrl;
+  final List<String> events; // Store event IDs
 
-  Friend({required this.name, required this.profilePic, required this.upcomingEvents});
-}
+  Friend({required this.id, required this.name, required this.profilePictureUrl, required this.events});
 
-class Friends extends ChangeNotifier {
-  final List<Friend> _friends = [
-    Friend(name: 'John Doe', profilePic: 'https://via.placeholder.com/150', upcomingEvents: 1),
-    Friend(name: 'Jane Smith', profilePic: 'https://via.placeholder.com/150', upcomingEvents: 0),
-  ];
+  factory Friend.fromMap(Map<String, dynamic> data) {
+    return Friend(
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      profilePictureUrl: data['profilePictureUrl'] ?? '',
+      events: List<String>.from(data['events'] ?? []),
+    );
+  }
 
-  List<Friend> get friends => _friends;
-
-  void addFriend(Friend friend) {
-    _friends.add(friend);
-    notifyListeners();
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'profilePictureUrl': profilePictureUrl,
+      'events': events,
+    };
   }
 }

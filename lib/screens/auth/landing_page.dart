@@ -28,102 +28,115 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F1F1), // Soft off-white background
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                // App Logo with more professional styling
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 180, // Slightly bigger logo for prominence
-                  height: 180,
+      backgroundColor: const Color(0xFFF1F1F1),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Animated Logo Container
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A6BFF).withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 30),
-
-                // App Title with elegant typography
-                const Text(
-                  'Hedieaty',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2A2D3D), // Dark gray color
-                    letterSpacing: 2, // Subtle spacing for professionalism
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 150,
+                    height: 150,
                   ),
                 ),
-                const SizedBox(height: 10),
+              ),
+              const SizedBox(height: 40),
 
-                // Subtitle with a professional touch
-                const Text(
-                  'Manage your gift lists effortlessly.',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Color(0xFF7D7D7D), // Light gray
-                  ),
-                  textAlign: TextAlign.center,
+              // App Title with Modern Typography
+              const Text(
+                'Hedieaty',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF2A2D3D),
+                  letterSpacing: 1.2,
                 ),
-                const SizedBox(height: 50),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
 
-                // Sign Up Button (Primary Action)
-                ElevatedButton(
+              // Subtitle with Refined Styling
+              const Text(
+                'Simplify Your Gift Giving Experience',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFF7D7D7D),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 50),
+
+              // Sign Up Button with Enhanced Design
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/signup');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2A6BFF), // Professional blue
-                    padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 15),
-                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    backgroundColor: const Color(0xFF2A6BFF),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30), // Rounded corners
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                    shadowColor: Colors.black.withOpacity(0.2), // Shadow for depth
+                    elevation: 5,
+                    shadowColor: const Color(0xFF2A6BFF).withOpacity(0.4),
                   ),
-                  child: Text('Sign Up'),
+                  child: const Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 20),
+              ),
+              const SizedBox(height: 20),
 
-                // Login Prompt Text with Login Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Already have an account? ',
+              // Login Option with Improved Layout
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Already have an account? ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF7D7D7D),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    child: Text(
+                      'Log In',
                       style: TextStyle(
+                        color: const Color(0xFF2A6BFF),
                         fontSize: 16,
-                        color: Color(0xFF7D7D7D),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacementNamed(context, '/login'); // Corrected navigation
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A6BFF), // Same blue as the primary button
-                          borderRadius: BorderRadius.circular(25), // Rounded corners
-                        ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

@@ -1,69 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:hediaty/db/database_helper.dart';
 
-class GiftDetailsPage extends StatefulWidget {
-  final int giftId;
-  GiftDetailsPage({required this.giftId});
+class EventDetailsPage extends StatefulWidget {
+  final int eventId;
+  EventDetailsPage({required this.eventId});
 
   @override
-  _GiftDetailsPageState createState() => _GiftDetailsPageState();
+  _EventDetailsPageState createState() => _EventDetailsPageState();
 }
 
-class _GiftDetailsPageState extends State<GiftDetailsPage> {
+class _EventDetailsPageState extends State<EventDetailsPage> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  String _status = 'Available';
+  final _locationController = TextEditingController();
+  String _status = 'Upcoming';
 
   @override
   void initState() {
     super.initState();
-    _loadGiftDetails();
+    _loadEventDetails();
   }
 
-  // Load gift details from database
-  _loadGiftDetails() async {
-    final gift = await DatabaseHelper.instance.queryGiftById(widget.giftId);
+  // Load event details from database
+  _loadEventDetails() async {
+    final event = await DatabaseHelper.instance.queryEventById(widget.eventId);
     setState(() {
-      _nameController.text = gift['name'];
-      _descriptionController.text = gift['description'];
-      _priceController.text = gift['price'].toString();
-      _status = gift['status'];
+      _nameController.text = event['name'];
+      _descriptionController.text = event['description'];
+      _locationController.text = event['location'];
+      _status = event['status'];
     });
   }
 
-  // Save gift details
-  _saveGift() async {
-    final updatedGift = {
+  // Save changes to event
+  _saveEvent() async {
+    final updatedEvent = {
       'name': _nameController.text,
       'description': _descriptionController.text,
-      'price': double.parse(_priceController.text),
+      'location': _locationController.text,
       'status': _status,
     };
-    await DatabaseHelper.instance.updateGift(widget.giftId, updatedGift);
+    await DatabaseHelper.instance.updateEvent(widget.eventId, updatedEvent);
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Gift Details')),
+      appBar: AppBar(title: Text('Edit Event')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Gift Name'),
+              decoration: InputDecoration(labelText: 'Event Name'),
             ),
             TextField(
               controller: _descriptionController,
               decoration: InputDecoration(labelText: 'Description'),
             ),
             TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Price'),
+              controller: _locationController,
+              decoration: InputDecoration(labelText: 'Location'),
             ),
             DropdownButton<String>(
               value: _status,
@@ -72,7 +71,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                   _status = newValue!;
                 });
               },
-              items: ['Available', 'Pledged']
+              items: ['Upcoming', 'Current', 'Past']
                   .map((status) => DropdownMenuItem<String>(
                         value: status,
                         child: Text(status),
@@ -80,8 +79,8 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                   .toList(),
             ),
             ElevatedButton(
-              onPressed: _saveGift,
-              child: Text('Save Gift'),
+              onPressed: _saveEvent,
+              child: Text('Save Event'),
             ),
           ],
         ),

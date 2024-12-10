@@ -35,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
         'name': _nameController.text,
         'email': _emailController.text
       };
-      await DatabaseHelper.instance.insert(row);
+      await DatabaseHelper.instance.insertUser(row);
 
       // Navigate to login page
       Navigator.pushReplacementNamed(context, '/login');
