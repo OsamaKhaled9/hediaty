@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';  // Import for platform checks
 
 class ProfilePicturePicker extends StatefulWidget {
   final Function(File) onPickImage;
@@ -31,28 +32,26 @@ class _ProfilePicturePickerState extends State<ProfilePicturePicker> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _pickImage,  // When tapped, it allows the user to pick a new image
-      child: Material(
-        color: Colors.transparent,  // Transparent background
-        elevation: 5,  // Subtle shadow effect
-        shape: CircleBorder(),
-        child: CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.grey[300],  // Default background color
-          child: _profileImage == null
-              ? Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 30,
-                )
-              : ClipOval(
-                  child: Image.file(
-                    _profileImage!,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
+      child: CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.grey[300],
+        child: _profileImage == null
+            ? ClipOval(
+                child: Image.asset(
+                  'assets/images/default_avatar.JPG',  // Default avatar from assets
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,  // Ensures image fits the circle
                 ),
-        ),
+              )
+            : ClipOval(
+                child: Image.file(
+                  _profileImage!,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,  // Ensures image fits the circle
+                ),
+              ),
       ),
     );
   }
