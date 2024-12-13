@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hediaty/db/db_init.dart';
-import 'package:hediaty/db/database_helper.dart';
+import 'package:hediaty/controllers/user_controller.dart';
+import 'package:hediaty/core/models/user.dart';
+import 'package:hediaty/widgets/custom_text_field.dart';
+import 'package:hediaty/widgets/custom_button.dart';
+import 'package:hediaty/widgets/profile_picture_picker.dart';
+import 'dart:io';  // For using the File class
+import 'package:image_picker/image_picker.dart';  // For picking images
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -12,137 +16,129 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
+  File? _profilePicture;
 
   String _errorMessage = "";
+  final UserController _userController = UserController();
 
-  @override
-  void initState() {
-    super.initState();
-    // Initialize database when the screen loads
-    DBInit.setupDB();
-  }
+  Future<void> _pickProfilePicture() async {
+    final ImagePicker _picker = ImagePicker();
 
-  Future<void> _signup() async {
-    try {
-      // Firebase Authentication logic
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: _emailController.text,
-              password: _passwordController.text);
+    // Show bottom sheet or dialog to choose between gallery and camera
+    final ImageSource source = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pick a profile picture'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: Text('Gallery'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: Text('Camera'),
+          ),
+        ],
+      ),
+    ) ?? ImageSource.gallery; // Default to gallery if no selection is made
 
-      // Store user data in SQLite locally
-      Map<String, dynamic> row = {
-        'name': _nameController.text,
-        'email': _emailController.text
-      };
-      await DatabaseHelper.instance.insertUser(row);
+    final XFile? image = await _picker.pickImage(source: source);
 
-      // Navigate to login page
-      Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
+    if (image != null) {
       setState(() {
-        _errorMessage = e.toString();
+        _profilePicture = File(image.path);
       });
     }
   }
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFF1F1F1),
-    appBar: AppBar(
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
-        //onPressed: () => Navigator.of(context).pop(),
-          onPressed: () => Navigator.pushReplacementNamed(context, '/landing'),
+  Future<void> _signUp() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty) {
+      setState(() {
+        _errorMessage = "Please fill all fields.";
+      });
+      return;
+    }
 
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = "Passwords do not match.";
+      });
+      return;
+    }
+
+    // Rename 'user' to 'newUser'
+    user newUser = user(
+      id: "",
+      fullName: _nameController.text,
+      email: _emailController.text,
+      phoneNumber: "",  // Assume phone number is optional
+      profilePictureUrl: "", // Assume profile picture is optional
+    );
+
+    String? error = await _userController.signUpUser(newUser, _passwordController.text, _profilePicture);
+    if (error != null) {
+      setState(() {
+        _errorMessage = error;
+      });
+    } else {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Sign Up")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ProfilePicturePicker(onPickImage: (pickedImage) {
+              setState(() {
+                _profilePicture = pickedImage;
+              });
+            }),
+            SizedBox(height: 16),
+            CustomTextField(
+              controller: _nameController,
+              labelText: "Full Name",
+              icon: Icons.person,
+            ),
+            SizedBox(height: 16),
+            CustomTextField(
+              controller: _emailController,
+              labelText: "Email",
+              icon: Icons.email,
+            ),
+            SizedBox(height: 16),
+            CustomTextField(
+              controller: _passwordController,
+              labelText: "Password",
+              icon: Icons.lock,
+              obscureText: true,
+            ),
+            SizedBox(height: 16),
+            CustomTextField(
+              controller: _confirmPasswordController,
+              labelText: "Confirm Password",
+              icon: Icons.lock,
+              obscureText: true,
+            ),
+            SizedBox(height: 16),
+            CustomTextField(
+              controller: _phoneController,
+              labelText: "Phone (Optional)",
+              icon: Icons.phone,
+            ),
+            SizedBox(height: 24),
+            CustomButton(label: "Sign Up", onPressed: _signUp),
+            if (_errorMessage.isNotEmpty)
+              Text(_errorMessage, style: TextStyle(color: Colors.red)),
+          ],
+        ),
       ),
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Create Account',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2A2D3D),
-            ),
-          ),
-          SizedBox(height: 30),
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Name',
-              prefixIcon: Icon(Icons.person, color: Color(0xFF2A6BFF)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
-          TextField(
-            controller: _emailController,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email, color: Color(0xFF2A6BFF)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              prefixIcon: Icon(Icons.lock, color: Color(0xFF2A6BFF)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
-              ),
-            ),
-          ),
-          SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _signup,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2A6BFF),
-              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: Text(
-              'Sign Up',
-              style: TextStyle(fontSize: 18),
-            ),
-          ),
-          SizedBox(height: 16),
-          if (_errorMessage.isNotEmpty)
-            Text(
-              _errorMessage,
-              style: TextStyle(color: Colors.red),
-            ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 }

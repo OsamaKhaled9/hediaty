@@ -1,28 +1,36 @@
-class User {
-  final String id;
-  final String name;
-  final String email;
-  final String profilePictureUrl;
+class user {
+  String id;
+  String fullName;
+  String email;
+  String phoneNumber;
+  String profilePictureUrl;  // Remove final to make this mutable
+  
+  user({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.profilePictureUrl,  // This can be updated after initialization
+  });
 
-  User({required this.id, required this.name, required this.email, required this.profilePictureUrl});
-
-  // From Firestore
-  factory User.fromMap(Map<String, dynamic> data) {
-    return User(
-      id: data['id'] ?? '',
-      name: data['name'] ?? '',
-      email: data['email'] ?? '',
-      profilePictureUrl: data['profilePictureUrl'] ?? '',
-    );
-  }
-
-  // To Firestore
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'fullName': fullName,
       'email': email,
+      'phoneNumber': phoneNumber,
       'profilePictureUrl': profilePictureUrl,
     };
+  }
+
+  // You can also create a fromJson method for serialization
+  factory user.fromJson(Map<String, dynamic> json) {
+    return user(
+      id: json['id'],
+      fullName: json['fullName'],
+      email: json['email'],
+      phoneNumber: json['phoneNumber'],
+      profilePictureUrl: json['profilePictureUrl'],
+    );
   }
 }
