@@ -3,6 +3,8 @@ import 'package:hediaty/db/database_helper.dart';
 import 'event_details_page.dart'; // For navigating to event details
 
 class EventListPage extends StatefulWidget {
+  const EventListPage({super.key});
+
   @override
   _EventListPageState createState() => _EventListPageState();
 }
@@ -48,10 +50,10 @@ class _EventListPageState extends State<EventListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Event List'),
+        title: const Text('Event List'),
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.pushNamed(context, '/create_event');
             },
@@ -65,11 +67,11 @@ class _EventListPageState extends State<EventListPage> {
             children: [
               TextButton(
                 onPressed: () => _sortEvents('name'),
-                child: Text('Sort by Name'),
+                child: const Text('Sort by Name'),
               ),
               TextButton(
                 onPressed: () => _sortEvents('status'),
-                child: Text('Sort by Status'),
+                child: const Text('Sort by Status'),
               ),
             ],
           ),
@@ -91,7 +93,7 @@ class _EventListPageState extends State<EventListPage> {
                     );
                   },
                   trailing: IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => _deleteEvent(event['id']),
                   ),
                 );

@@ -10,7 +10,7 @@ ThemeData appTheme() {
   return ThemeData(
     primaryColor: primaryBlue,
     scaffoldBackgroundColor: backgroundColor,
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       headlineLarge:TextStyle(color: darkGray, fontWeight: FontWeight.bold, fontSize: 24),
       bodyLarge: TextStyle(color: darkGray),
       /*headline1: TextStyle(color: darkGray, fontWeight: FontWeight.bold, fontSize: 24),
@@ -20,11 +20,11 @@ ThemeData appTheme() {
       subtitle1: TextStyle(color: darkGray), // For smaller text
       subtitle2: TextStyle(color: lightGray), // For smaller light text */
     ),
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       color: primaryBlue,
       titleTextStyle: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
     ),
-    buttonTheme: ButtonThemeData(
+    buttonTheme: const ButtonThemeData(
       buttonColor: primaryBlue,
       textTheme: ButtonTextTheme.primary,
     ),

@@ -17,13 +17,13 @@ class _HomePageState extends State<HomePage> {
     {
       "id": 1,
       "name": "John Doe",
-      "profilePictureUrl": "https://via.placeholder.com/150",
+      "profilePictureUrl": "assets/profile_pics/avatar1.png",
       "events": ["Birthday", "Anniversary"]
     },
     {
       "id": 2,
       "name": "Jane Smith",
-      "profilePictureUrl": "https://via.placeholder.com/150",
+      "profilePictureUrl": "assets/profile_pics/avatar3.png",
       "events": []
     },
   ];
@@ -76,18 +76,18 @@ class _HomePageState extends State<HomePage> {
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.2),
                     blurRadius: 6,
-                    offset: Offset(0, 4),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterFriends,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: "Search for friends...",
-                  prefixIcon: const Icon(Icons.search, color: lightGray),
+                  prefixIcon: Icon(Icons.search, color: lightGray),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 ),
               ),
             ),
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.2),
                           blurRadius: 6,
-                          offset: Offset(0, 4),
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                         style: const TextStyle(fontSize: 14, color: lightGray),
                       ),
                       onTap: () => _navigateToFriendGiftList(friend["id"]),
-                      trailing: Icon(Icons.chevron_right, color: lightGray),
+                      trailing: const Icon(Icons.chevron_right, color: lightGray),
                     ),
                   );
                 },

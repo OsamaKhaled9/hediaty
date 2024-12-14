@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -39,7 +41,7 @@ Widget build(BuildContext context) {
     backgroundColor: const Color(0xFFF1F1F1),
     appBar: AppBar(
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
         onPressed: () => Navigator.of(context).pop(),
       ),
       backgroundColor: Colors.transparent,
@@ -50,7 +52,7 @@ Widget build(BuildContext context) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const Text(
             'Welcome Back',
             style: TextStyle(
               fontSize: 28,
@@ -58,72 +60,72 @@ Widget build(BuildContext context) {
               color: Color(0xFF2A2D3D),
             ),
           ),
-          SizedBox(height: 10),
-          Text(
+          const SizedBox(height: 10),
+          const Text(
             'Login to continue',
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF7D7D7D),
             ),
           ),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           TextField(
             controller: _emailController,
             decoration: InputDecoration(
               labelText: 'Email',
-              prefixIcon: Icon(Icons.email, color: Color(0xFF2A6BFF)),
+              prefixIcon: const Icon(Icons.email, color: Color(0xFF2A6BFF)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
+                borderSide: const BorderSide(color: Color(0xFF2A6BFF), width: 2),
               ),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           TextField(
             controller: _passwordController,
             obscureText: true,
             decoration: InputDecoration(
               labelText: 'Password',
-              prefixIcon: Icon(Icons.lock, color: Color(0xFF2A6BFF)),
+              prefixIcon: const Icon(Icons.lock, color: Color(0xFF2A6BFF)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
+                borderSide: const BorderSide(color: Color(0xFF2A6BFF), width: 2),
               ),
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _login,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2A6BFF),
-              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              backgroundColor: const Color(0xFF2A6BFF),
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Login',
               style: TextStyle(fontSize: 18),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           if (_errorMessage.isNotEmpty)
             Text(
               _errorMessage,
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             ),
-          Spacer(),
+          const Spacer(),
           TextButton(
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/signup');
             },
-            child: Text(
+            child: const Text(
               'Don\'t have an account? Sign up',
               style: TextStyle(color: Color(0xFF2A6BFF)),
             ),

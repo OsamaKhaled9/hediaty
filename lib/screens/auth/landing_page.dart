@@ -125,10 +125,10 @@ class _LandingPageState extends State<LandingPage> {
                     onTap: () {
                       Navigator.pushReplacementNamed(context, '/login');
                     },
-                    child: Text(
+                    child: const Text(
                       'Log In',
                       style: TextStyle(
-                        color: const Color(0xFF2A6BFF),
+                        color: Color(0xFF2A6BFF),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),

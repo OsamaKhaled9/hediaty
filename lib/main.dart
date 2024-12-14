@@ -43,11 +43,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/loading',
       routes: {
         '/loading': (context) => const LoadingPage(),
-        '/landing': (context) => LandingPage(),
+        '/landing': (context) => const LandingPage(),
         '/signup': (context) => SignUpPage(),
         '/login': (context) => LoginPage(),
-        '/home': (context) => HomePage(),
-        '/create_event_list': (context) => CreateEventPage(),
+        '/home': (context) => const HomePage(),
+        '/create_event_list': (context) => const CreateEventPage(),
         '/profile': (context) => ProfilePage(),
         '/event_list': (context) => EventListPage(),
         '/gift_list': (context) => GiftListPage(eventId: 1), // Use dynamic data

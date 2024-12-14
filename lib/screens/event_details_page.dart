@@ -3,7 +3,7 @@ import 'package:hediaty/db/database_helper.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final int eventId;
-  EventDetailsPage({required this.eventId});
+  const EventDetailsPage({super.key, required this.eventId});
 
   @override
   _EventDetailsPageState createState() => _EventDetailsPageState();
@@ -47,22 +47,22 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Event')),
+      appBar: AppBar(title: const Text('Edit Event')),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Event Name'),
+              decoration: const InputDecoration(labelText: 'Event Name'),
             ),
             TextField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
+              decoration: const InputDecoration(labelText: 'Description'),
             ),
             TextField(
               controller: _locationController,
-              decoration: InputDecoration(labelText: 'Location'),
+              decoration: const InputDecoration(labelText: 'Location'),
             ),
             DropdownButton<String>(
               value: _status,
@@ -80,7 +80,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             ),
             ElevatedButton(
               onPressed: _saveEvent,
-              child: Text('Save Event'),
+              child: const Text('Save Event'),
             ),
           ],
         ),

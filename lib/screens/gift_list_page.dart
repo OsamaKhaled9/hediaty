@@ -4,7 +4,7 @@ import 'package:hediaty/db/database_helper.dart';
 
 class GiftListPage extends StatefulWidget {
   final int eventId;
-  GiftListPage({required this.eventId});
+  const GiftListPage({super.key, required this.eventId});
 
   @override
   _GiftListPageState createState() => _GiftListPageState();
@@ -31,10 +31,10 @@ class _GiftListPageState extends State<GiftListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gift List'),
+        title: const Text('Gift List'),
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.pushNamed(context, '/create_gift', arguments: widget.eventId);
             },

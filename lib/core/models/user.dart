@@ -1,10 +1,13 @@
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+
 class user {
   String id;
   String fullName;
   String email;
-  String phoneNumber;  // Make sure this is included
+  String phoneNumber;
   String profilePictureUrl;
-  String passwordHash;  // Add passwordHash field for storing hashed password
+  String passwordHash; // Store password hash, not plain text
 
   user({
     required this.id,
@@ -15,20 +18,30 @@ class user {
     required this.passwordHash,
   });
 
-  // Convert the user model to a Map for Firestore and SQLite insertion
+  // Function to hash the password before storing it
+  void setPassword(String password) {
+    passwordHash = _hashPassword(password);
+  }
+
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);  // Convert password to bytes
+    final digest = sha256.convert(bytes);  // Hash using SHA256
+    return digest.toString();  // Return the hashed password as a string
+  }
+
+  // Convert the user object to JSON for saving in SQLite
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'fullName': fullName,
       'email': email,
-      'phoneNumber': phoneNumber,  // Add this to ensure it's stored
+      'phoneNumber': phoneNumber,
       'profilePictureUrl': profilePictureUrl,
-      'passwordHash': passwordHash,  // Add password hash to the map
+      'passwordHash': passwordHash, // Use the hashed password
     };
   }
 
-
-  // You can also create a fromJson method for serialization
+  // Convert JSON back to a User object
   factory user.fromJson(Map<String, dynamic> json) {
     return user(
       id: json['id'],
@@ -36,7 +49,7 @@ class user {
       email: json['email'],
       phoneNumber: json['phoneNumber'],
       profilePictureUrl: json['profilePictureUrl'],
-      passwordHash: json['passwordHash'],  // Add password hash to the constructor arguments
+      passwordHash: json['passwordHash'],
     );
   }
 }

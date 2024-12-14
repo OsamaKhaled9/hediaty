@@ -3,7 +3,7 @@ import 'package:hediaty/db/database_helper.dart';
 
 class GiftDetailsPage extends StatefulWidget {
   final int giftId;
-  GiftDetailsPage({required this.giftId});
+  const GiftDetailsPage({super.key, required this.giftId});
 
   @override
   _GiftDetailsPageState createState() => _GiftDetailsPageState();
@@ -47,23 +47,23 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Gift Details')),
+      appBar: AppBar(title: const Text('Gift Details')),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Gift Name'),
+              decoration: const InputDecoration(labelText: 'Gift Name'),
             ),
             TextField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
+              decoration: const InputDecoration(labelText: 'Description'),
             ),
             TextField(
               controller: _priceController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Price'),
+              decoration: const InputDecoration(labelText: 'Price'),
             ),
             DropdownButton<String>(
               value: _status,
@@ -81,7 +81,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
             ),
             ElevatedButton(
               onPressed: _saveGift,
-              child: Text('Save Gift'),
+              child: const Text('Save Gift'),
             ),
           ],
         ),

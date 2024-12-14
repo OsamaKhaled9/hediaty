@@ -43,10 +43,10 @@ class _LoadingPageState extends State<LoadingPage> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Color(0xFF2A6BFF).withOpacity(0.1),
+                color: const Color(0xFF2A6BFF).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Center(
+              child: const Center(
                 child: Icon(
                   Icons.card_giftcard,
                   size: 80,
@@ -54,8 +54,8 @@ class _LoadingPageState extends State<LoadingPage> {
                 ),
               ),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Hedieaty',
               style: TextStyle(
                 fontSize: 24,
@@ -64,8 +64,8 @@ class _LoadingPageState extends State<LoadingPage> {
                 letterSpacing: 1.5,
               ),
             ),
-            SizedBox(height: 10),
-            CircularProgressIndicator(
+            const SizedBox(height: 10),
+            const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2A6BFF)),
             ),
           ],

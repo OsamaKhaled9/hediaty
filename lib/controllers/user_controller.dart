@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:hediaty/services/firebase_service.dart';
 import 'package:hediaty/services/database_service.dart';
 import 'package:hediaty/services/session_service.dart';
@@ -11,27 +10,25 @@ class UserController {
   final SessionService _sessionService = SessionService();
 
   // Sign up user, authenticate, upload profile pic, and save data
-Future<String?> signUpUser(user user, String password, File? profileImage) async {
+Future<String?> signUpUser(user user, String password, String avatarPath) async {
   try {
     // Firebase Auth Sign Up
     UserCredential userCredential = await _firebaseService.signUpUser(user.email, password);
     user.id = userCredential.user?.uid ?? "";
 
-    // Hash password for secure storage
-    String hashedPassword = _firebaseService.hashPassword(password);
-    user.passwordHash = hashedPassword;
+    // Save avatar path (either default or selected from assets)
+    user.profilePictureUrl = avatarPath.isNotEmpty ? avatarPath : 'assets/images/default_avatar.JPG';  // Default if no selection
 
-    // Upload profile picture if provided
-    if (profileImage != null) {
-      user.profilePictureUrl = await _firebaseService.uploadProfilePicture(profileImage);
-    }
+    // Store user data in SQLite (optional, can be removed if not using SQLite)
+    print("Saving user data to local: ${user.toJson()}");  // Debug log
+
+    await _databaseService.insertUser(user);
 
     // Save user data to Firestore
-    print("Saving user to Firestore: ${user.phoneNumber}");
-    await _firebaseService.saveUserToFirestore(user);
-    
-    // Store user data in SQLite (local storage)
-    await _databaseService.insertUser(user);
+
+    print("Saving user data to Firestore: ${user.toString()}");  // Debug log
+
+    await _firebaseService.saveUserToFirestore(user, avatarPath);
 
     // Save session
     await _sessionService.saveSession(true);
@@ -41,5 +38,4 @@ Future<String?> signUpUser(user user, String password, File? profileImage) async
     return e.toString();
   }
 }
-
 }
