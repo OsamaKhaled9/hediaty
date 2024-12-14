@@ -10,9 +10,12 @@ import 'package:hediaty/screens/event_list_page.dart'; // Add these imports
 import 'package:hediaty/screens/gift_list_page.dart';
 import 'package:hediaty/screens/profile_page.dart';
 import 'package:hediaty/screens/create_event_page.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';  // Import FFI version of sqflite
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  sqfliteFfiInit();
 
   try {
     await Firebase.initializeApp(

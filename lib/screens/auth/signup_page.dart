@@ -56,7 +56,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _signUp() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty) {
       setState(() {
-        _errorMessage = "Please fill all fields.";
+        _errorMessage = "Please fill all the required fields.";
       });
       return;
     }
@@ -73,8 +73,10 @@ class _SignUpPageState extends State<SignUpPage> {
       id: "",
       fullName: _nameController.text,
       email: _emailController.text,
-      phoneNumber: "",  // Assume phone number is optional
+      phoneNumber: _phoneController.text,  // Assume phone number is optional
       profilePictureUrl: "", // Assume profile picture is optional
+      passwordHash: "",  // Password hash will be updated later
+
     );
 
     String? error = await _userController.signUpUser(newUser, _passwordController.text, _profilePicture);
@@ -90,8 +92,15 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Sign Up")),
-      body: Padding(
+      appBar: AppBar(
+        title: Text("Sign Up"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);  // Navigate back to the landing page
+          },
+        ),
+      ),      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -136,9 +145,16 @@ class _SignUpPageState extends State<SignUpPage> {
             CustomButton(label: "Sign Up", onPressed: _signUp),
             if (_errorMessage.isNotEmpty)
               Text(_errorMessage, style: TextStyle(color: Colors.red)),
-          ],
+            SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/login');
+              },
+              child: Text("Already have an account? Login"),
         ),
+          ],
       ),
+    ),
     );
   }
 }
