@@ -32,6 +32,18 @@ class _SignUpPageState extends State<SignUpPage> {
       _selectedAvatar = avatarPath;  // Update selected avatar path
     });
   }
+  String? validatePhoneNumber(String? value)  {
+    if (value == null || value.isEmpty) {
+      return 'Phone number is required';
+    }
+    if (value.length != 11) {
+      return 'Phone number must be exactly 11 digits';
+    }
+    if (!RegExp(r'^\d{11}$').hasMatch(value)) {
+      return 'Phone number must contain only digits';
+    }
+    return null;
+  }
 
   Future<void> _signUp() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty) {
@@ -58,7 +70,7 @@ class _SignUpPageState extends State<SignUpPage> {
       passwordHash: "",  // Password hash will be updated later
     );
 
-    String? error = await _userController.signUpUser(newUser, _passwordController.text, _selectedAvatar);
+    String? error = await _userController.signUpUser(newUser, _passwordController.text,_phoneController.text, _selectedAvatar);
     if (error != null) {
       setState(() {
         _errorMessage = error;

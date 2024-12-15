@@ -43,6 +43,8 @@ dependencies:
   provider: ^6.1.2
   flutter_router: ^1.0.0 # for routing
   cached_network_image: ^3.2.3 # for caching images
+  font_awesome_flutter: ^10.7.0  # Use the latest stable version
+
 
   
 flutter_localizations:

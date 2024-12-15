@@ -52,4 +52,14 @@ class user {
       passwordHash: json['passwordHash'],
     );
   }
+     factory user.fromMap(Map<String, dynamic> data) {
+        return user(
+            id: data['id'] as String? ?? '',
+            fullName: data['fullName'] as String? ?? 'No Name',
+            email: data['email'] as String? ?? 'No Email',
+            phoneNumber: data['phoneNumber'] as String? ?? 'No Phone Number',
+            profilePictureUrl: data['profilePictureUrl'] as String? ?? 'Default URL',
+            passwordHash: data['passwordHash'] as String? ?? '',
+        );
+    }
 }

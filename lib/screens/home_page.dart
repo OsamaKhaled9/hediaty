@@ -1,151 +1,190 @@
 import 'package:flutter/material.dart';
-import 'package:hediaty/utils/theme.dart';
+import 'package:hediaty/controllers/home_controller.dart';
+import 'package:hediaty/core/models/user.dart'; // Ensure this import is correct
+import 'package:hediaty/core/models/friend.dart'; // Import the Friend model
+import 'package:provider/provider.dart';
+import 'package:hediaty/widgets/footer.dart';  // Assuming you have a footer widget
+import 'package:hediaty/widgets/friend_list_item.dart';  // Assuming you have a friend list item widget
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> filteredFriendsList = []; // Replace with actual data source
-
-  // Simulated friend list for demonstration
-  final List<Map<String, dynamic>> friendsList = [
-    {
-      "id": 1,
-      "name": "John Doe",
-      "profilePictureUrl": "assets/profile_pics/avatar1.png",
-      "events": ["Birthday", "Anniversary"]
-    },
-    {
-      "id": 2,
-      "name": "Jane Smith",
-      "profilePictureUrl": "assets/profile_pics/avatar3.png",
-      "events": []
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    filteredFriendsList = friendsList;
+class HomePage extends StatelessWidget {
+   void _showAddFriendModal(BuildContext context, HomeController homeController) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return FutureBuilder<List<user>>(
+          future: homeController.getPotentialFriends(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text("No potential friends found"));
+            }
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(snapshot.data![index].profilePictureUrl),
+                  ),
+                  title: Text(snapshot.data![index].fullName),
+                  onTap: () {
+                    homeController.addFriend(snapshot.data![index].id);
+                    Navigator.pop(context);  // Close the modal after adding friend
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
-
-  void _filterFriends(String query) {
-    setState(() {
-      filteredFriendsList = friendsList
-          .where((friend) => friend["name"].toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
-  void _addFriend() {
-    // Logic to add a friend
-  }
-
-  void _navigateToFriendGiftList(int friendId) {
-    Navigator.pushNamed(context, '/event_list', arguments: friendId);
-  }
-
+  
   @override
   Widget build(BuildContext context) {
+    final homeController = Provider.of<HomeController>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Home"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addFriend,
-          ),
-        ],
+        title: Text("Home"),
+        backgroundColor: Theme.of(context).primaryColor,
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            // Open a drawer or menu
+          },
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search bar
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+            // User Profile Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Consumer<HomeController>(
+                builder: (context, controller, child) {
+                  return FutureBuilder<user?>(
+                    future: controller.getCurrentUser(), // Fetch current user data
+                    builder: (context, snapshot) {
+                      print(controller.getCurrentUser());
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator()); // Show loading indicator
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(child: Text("Error: ${snapshot.error}"));
+                      }
+
+                      user? currentUser = snapshot.data;
+                      print(currentUser);
+
+                      if (currentUser == null) {
+                        return Center(child: Text("No user logged in"));
+                      }
+
+                      // Profile display section
+                      return Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage: currentUser.profilePictureUrl.isNotEmpty
+                                ? AssetImage(currentUser.profilePictureUrl)
+                                : AssetImage("assets/images/default_avatar.JPG") as ImageProvider, // Fallback to default image
+                          ),
+                          SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Hello, ${currentUser.fullName}!", // Display user name
+                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                "You have 0 upcoming events", // Placeholder for events count
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
+            ),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: TextField(
-                controller: _searchController,
-                onChanged: _filterFriends,
-                decoration: const InputDecoration(
-                  hintText: "Search for friends...",
-                  prefixIcon: Icon(Icons.search, color: lightGray),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: InputDecoration(
+                  labelText: "Search Friends",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
                 ),
+                onChanged: (value) {
+                  // Handle search query
+                },
               ),
             ),
-            const SizedBox(height: 16),
-            // Button to create event or gift list
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/create_event_list');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Center(
-                child: Text(
-                  "Create Your Own Event/List",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Friends list
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredFriendsList.length,
-                itemBuilder: (context, index) {
-                  final friend = filteredFriendsList[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(friend["profilePictureUrl"]),
-                      ),
-                      title: Text(
-                        friend["name"],
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkGray),
-                      ),
-                      subtitle: Text(
-                        friend["events"].isNotEmpty
-                            ? "Upcoming Events: ${friend["events"].length}"
-                            : "No Upcoming Events",
-                        style: const TextStyle(fontSize: 14, color: lightGray),
-                      ),
-                      onTap: () => _navigateToFriendGiftList(friend["id"]),
-                      trailing: const Icon(Icons.chevron_right, color: lightGray),
-                    ),
+
+            // Friends List
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Consumer<HomeController>(
+                builder: (context, controller, child) {
+                  return FutureBuilder<user?>(
+                    future: controller.getCurrentUser(), // Fetch current user data again
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator()); // Show loading indicator
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(child: Text("Error: ${snapshot.error}"));
+                      }
+
+                      user? currentUser = snapshot.data;
+
+                      if (currentUser == null) {
+                        return Center(child: Text("No user logged in"));
+                      }
+
+                      // Load Friends List
+                      return FutureBuilder<List<Friend>>(
+                        future: controller.loadFriends(currentUser.id), // Pass the userId
+                        builder: (context, friendSnapshot) {
+                          if (friendSnapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator()); // Show loading indicator
+                          }
+
+                          if (friendSnapshot.hasError) {
+                            return Center(child: Text("Error: ${friendSnapshot.error}"));
+                          }
+
+                          List<Friend> friends = friendSnapshot.data ?? [];
+
+                          if (friends.isEmpty) {
+                            return Center(child: Text("No friends found"));
+                          }
+
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: friends.length,
+                            itemBuilder: (context, index) {
+                              return FriendListItem(friend: friends[index]); // Display each friend item
+                            },
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
@@ -153,6 +192,15 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+      
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddFriendModal(context, homeController),
+        backgroundColor: Theme.of(context).primaryColor,
+        child: Icon(Icons.add),
+      ),
+
+      // Footer Navigation
+      bottomNavigationBar: Footer(),
     );
   }
 }
