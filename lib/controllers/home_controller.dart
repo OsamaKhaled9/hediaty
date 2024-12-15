@@ -59,7 +59,7 @@ class HomeController extends ChangeNotifier {
         friend.upcomingEventsCount = count;
         
         // Update local database with friend details
-        await _databaseService.insertFriend(friend);
+       // await _databaseService.insertFriend(friend);
       }
       
       return friends;
