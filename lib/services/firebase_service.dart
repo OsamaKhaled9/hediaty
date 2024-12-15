@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';  // For hashing the password
 import 'dart:convert';  // For UTF-8 encoding
 import 'package:hediaty/core/models/friend.dart';  // Import friend model
 import 'package:hediaty/controllers/home_controller.dart';
+import 'package:uuid/uuid.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -48,6 +49,7 @@ class FirebaseService {
 
       // Save user data to Firestore
       await _firestore.collection('users').doc(user.id).set({
+        'id': user.id,  // Explicitly store the user ID within the document
         'fullName': user.fullName,
         'email': user.email,
         'phoneNumber': user.phoneNumber,
@@ -62,7 +64,7 @@ class FirebaseService {
   }
 
   // Fetch friends of a user from Firestore
-  Future<List<Friend>> getFriends(String userId) async {
+ /* Future<List<Friend>> getFriends(String userId) async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection('friends')
@@ -78,31 +80,71 @@ class FirebaseService {
       print("Error fetching friends: $e");
       return [];
     }
+  }*/
+Future<List<Friend>> getFriends(String userId) async {
+  try {
+    QuerySnapshot snapshot = await _firestore.collection('friends')
+        .where('userId', isEqualTo: userId)
+        .get();
+    List<Friend> friends = snapshot.docs.map((doc) {
+      try {
+        return Friend.fromJson(doc.data() as Map<String, dynamic>);
+      } catch (e) {
+        print("Error processing document ${doc.id}: $e");
+        return null; // Return null if there's an error
+      }
+    }).where((friend) => friend != null).cast<Friend>().toList(); // Filter out nulls
+    return friends;
+  } catch (e) {
+    print("Error fetching friends: $e");
+    return [];
   }
+}
 
-  // Add a friend to Firestore (with mutual entries)
-  Future<void> addFriendToFirestore(Friend friend) async {
-    try {
-      // Add friend to the current user's friends collection
-      await _firestore.collection('friends').doc(friend.id).set(friend.toJson());
-      
-      // Add the reciprocal friend entry (i.e., both users have the other listed as a friend)
-      Friend reciprocalFriend = Friend(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: friend.friendId,
-        friendId: friend.userId,
-        friendName: friend.friendName,
-        friendAvatar: friend.friendAvatar,
-        upcomingEventsCount: 0,  // Default value, can be updated later
-      );
-      await _firestore.collection('friends').doc(reciprocalFriend.id).set(reciprocalFriend.toJson());
-      
-      print("Friend added successfully.");
-    } catch (e) {
-      print("Error adding friend: $e");
-      throw Exception("Error adding friend: $e");
-    }
+
+
+
+
+
+/*Future<void> addFriendToFirestore(Friend friend) async {
+  var uuid = Uuid();
+  String friendId = uuid.v4();  // Ensuring the ID is never empty
+  print("Adding friend at path: users/${friend.userId}/friends/$friendId");
+
+  try {
+    await _firestore.collection('users').doc(friend.userId)
+      .collection('friends').doc(friendId).set(friend.toJson());
+
+    // Assuming friendId and userId are properly set
+  } catch (e) {
+    print("Error adding friend: $e");
+    throw Exception("Error adding friend: $e");
   }
+}*/
+
+Future<void> addFriendToFirestore(Friend friend) async {
+  if (friend.userId.isEmpty || friend.friendId.isEmpty) {
+  throw ArgumentError("User ID and Friend ID must not be empty.");
+}
+  try {
+    var uuid = Uuid();
+    String friendshipId = uuid.v4();  // Unique ID for the friendship document
+    print(friendshipId);
+    await _firestore.collection('friends').doc(friendshipId).set({
+      'userId': friend.userId,
+      'friendId': friend.friendId,
+      'friendName': friend.friendName,
+      'friendAvatar': friend.friendAvatar,
+      'upcomingEventsCount': friend.upcomingEventsCount,
+    });
+
+    print("Friend added successfully.");
+  } catch (e) {
+    print("Error adding friend: $e");
+    throw Exception("Error adding friend: $e");
+  }
+}
+
 
   // Search for a user by phone number or name
   Future<List<Friend>> searchFriends(String query) async {
@@ -112,8 +154,16 @@ class FirebaseService {
           .where('fullName', isGreaterThanOrEqualTo: query)
           .where('fullName', isLessThan: query + 'z')  // Ensures fullName starts with query
           .get();
-      
-      List<Friend> friends = snapshot.docs.map((doc) {
+          List<Friend> friends = snapshot.docs.map((doc) {
+            try {
+                return Friend.fromJson(doc.data() as Map<String, dynamic>);
+            } catch (e) {
+                print("Error processing friend data for document ${doc.id}: $e");
+                return null; // Returning null for this document and filtering out later
+            }
+            }).where((friend) => friend != null).cast<Friend>().toList(); // Filter out nulls
+
+      /*List<Friend> friends = snapshot.docs.map((doc) {
         return Friend(
           id: doc.id, // Use Firestore document ID as unique friend ID
           userId: doc['id'],
@@ -122,7 +172,7 @@ class FirebaseService {
           friendAvatar: doc['profilePictureUrl'],
           upcomingEventsCount: 0,  // Default value, can be updated later
         );
-      }).toList();
+      }).toList();*/
       
       return friends;
     } catch (e) {

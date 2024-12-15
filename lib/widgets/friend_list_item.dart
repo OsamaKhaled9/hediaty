@@ -14,7 +14,7 @@ class FriendListItem extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           radius: 30,
-          backgroundImage: NetworkImage(friend.friendAvatar), // Show the friend's avatar
+          backgroundImage: AssetImage(friend.friendAvatar), // Show the friend's avatar
         ),
         title: Text(
           friend.friendName,

@@ -1,6 +1,7 @@
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class user {
   String id;
   String fullName;
@@ -62,4 +63,16 @@ class user {
             passwordHash: data['passwordHash'] as String? ?? '',
         );
     }
+
+   factory user.fromFirebaseUser(User firebaseUser, Map<String, dynamic> additionalData) {
+        return user(
+            id: firebaseUser.uid,
+            fullName: additionalData['fullName'] ?? '',
+            email: firebaseUser.email ?? '',
+            phoneNumber: additionalData['phoneNumber'] ?? '',
+            profilePictureUrl: additionalData['profilePictureUrl'] ?? 'default_avatar.jpg',
+            passwordHash: additionalData['passwordHash'] ?? '',
+
+        );
+    }  
 }

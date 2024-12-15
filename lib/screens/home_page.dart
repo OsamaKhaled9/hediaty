@@ -14,6 +14,7 @@ class HomePage extends StatelessWidget {
         return FutureBuilder<List<user>>(
           future: homeController.getPotentialFriends(),
           builder: (context, snapshot) {
+            print(snapshot.toString());
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
             }
@@ -28,11 +29,14 @@ class HomePage extends StatelessWidget {
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: NetworkImage(snapshot.data![index].profilePictureUrl),
+                    backgroundImage:AssetImage(snapshot.data![index].profilePictureUrl),
                   ),
                   title: Text(snapshot.data![index].fullName),
                   onTap: () {
+                  print(snapshot.data![index].id);
+
                     homeController.addFriend(snapshot.data![index].id);
+                    print("HIIIIIIII");
                     Navigator.pop(context);  // Close the modal after adding friend
                   },
                 );
@@ -72,7 +76,6 @@ class HomePage extends StatelessWidget {
                     future: controller.getCurrentUser(), // Fetch current user data
                     builder: (context, snapshot) {
                       print(controller.getCurrentUser());
-
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(child: CircularProgressIndicator()); // Show loading indicator
                       }
