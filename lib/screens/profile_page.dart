@@ -29,86 +29,102 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  void _toggleNotification(bool isEnabled) {
-    if (_currentUser != null) {
-      setState(() {
-        _currentUser = _currentUser!.copyWith(isNotificationsEnabled: isEnabled);
-      });
-      _profileController.updateNotificationSetting(_currentUser!);
-    }
+  void _toggleNotification(bool isEnabled, user currentUser) {
+    // Update the Firestore data immediately when toggled
+    _profileController.updateNotificationSetting(
+      currentUser.copyWith(isNotificationsEnabled: isEnabled),
+    );
   }
 
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile"),
       ),
-      body: _currentUser == null
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Avatar with edit button
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage(_currentUser!.profilePictureUrl),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/edit_profile_details',
-                              arguments: _currentUser);
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.blue,
-                          ),
-                          padding: EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+      body: StreamBuilder<user?>(
+        stream: _profileController.getUserProfileStream(widget.userId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          user? currentUser = snapshot.data;
+
+          if (currentUser == null) {
+            return Center(child: Text("No user data available"));
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Avatar with edit button
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: AssetImage(currentUser.profilePictureUrl),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/edit_profile_details',
+                            arguments: currentUser);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.blue,
+                        ),
+                        padding: EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 20,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Text(
-                  _currentUser!.fullName,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                Text(_currentUser!.email),
-                SwitchListTile(
-                  title: Text("Enable Notifications"),
-                  value: _currentUser!.isNotificationsEnabled,
-                  onChanged: _toggleNotification,
-                ),
-                // Links to Events and Pledged Gifts
-                ListTile(
-                  leading: Icon(Icons.event),
-                  title: Text("My Events"),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/events');
-                  },
-                ),
-                ListTile(
-                  leading: Icon(Icons.card_giftcard),
-                  title: Text("Pledged Gifts"),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/pledged_gifts');
-                  },
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              Text(
+                currentUser.fullName,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              Text(currentUser.email),
+              SwitchListTile(
+                title: Text("Enable Notifications"),
+                value: currentUser.isNotificationsEnabled,
+                onChanged: (value) => _toggleNotification(value, currentUser),
+              ),
+              // Links to Events and Pledged Gifts
+              ListTile(
+                leading: Icon(Icons.event),
+                title: Text("My Events"),
+                onTap: () {
+                  Navigator.pushNamed(context, '/events');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.card_giftcard),
+                title: Text("Pledged Gifts"),
+                onTap: () {
+                  Navigator.pushNamed(context, '/pledged_gifts');
+                },
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

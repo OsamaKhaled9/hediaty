@@ -30,10 +30,12 @@ class ProfileController {
     return await _firebaseService.getUserById(userId); // Use the new method
   }
 
-  void updateNotificationSetting(user updatedUser) {
-    _firebaseService.updateUser(updatedUser); // Update in Firestore
+  /// Update notification settings
+  Future<void> updateNotificationSetting(user updatedUser) async {
+    await _firestore.collection('users').doc(updatedUser.id).update({
+      'isNotificationsEnabled': updatedUser.isNotificationsEnabled,
+    });
   }
-
     /// Updates the user profile in Firestore
   Future<void> updateUserProfile(user updatedUser) async {
     try {
@@ -52,5 +54,15 @@ class ProfileController {
       throw Exception("Failed to update user profile.");
     }
   }
+   /// Stream to listen to real-time updates of the user profile
+  Stream<user?> getUserProfileStream(String userId) {
+    return _firestore.collection('users').doc(userId).snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        return user.fromMap(snapshot.data() as Map<String, dynamic>);
+      }
+      return null;
+    });
+  }
+  
 }
 

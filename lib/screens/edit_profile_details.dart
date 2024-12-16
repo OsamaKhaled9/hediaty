@@ -6,7 +6,7 @@ import 'package:hediaty/widgets/custom_text_field.dart';
 
 
 class EditProfileDetails extends StatefulWidget {
-  final user currentUser;
+  final user currentUser ;
 
   const EditProfileDetails({Key? key, required this.currentUser}) : super(key: key);
 
