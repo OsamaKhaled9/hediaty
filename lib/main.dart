@@ -9,13 +9,14 @@ import 'package:hediaty/screens/home_page.dart';
 import 'package:hediaty/screens/event_list_page.dart'; 
 import 'package:hediaty/screens/gift_list_page.dart';
 import 'package:hediaty/screens/profile_page.dart';
+import 'package:hediaty/screens/edit_profile_details.dart';
 import 'package:hediaty/screens/create_event_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:provider/provider.dart';
 import 'package:hediaty/controllers/home_controller.dart';
 import 'package:hediaty/controllers/user_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:hediaty/core/models/user.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
@@ -75,6 +76,10 @@ class MyApp extends StatelessWidget {
           },
           '/event_list': (context) => EventListPage(),
           '/gift_list': (context) => GiftListPage(eventId: 1), // Replace 1 with dynamic data
+          '/edit_profile_details': (context) {
+              final user currentUser = ModalRoute.of(context)?.settings.arguments as user;
+              return EditProfileDetails(currentUser: currentUser);
+            },
         },
       ),
     );
