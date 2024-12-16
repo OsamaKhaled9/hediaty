@@ -248,6 +248,39 @@ Future<user?> getCurrentUser() async {
     return null;
   }
 }
+  Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
+    try {
+      // Query the `events` collection for the given friend ID
+      QuerySnapshot eventsSnapshot = await _firestore
+          .collection('events') // Assume the collection name is 'events'
+          .where('friendId', isEqualTo: friendId)
+          .get();
 
+      // Map each document to a Map containing event details and gift count
+      List<Map<String, dynamic>> events = [];
+
+      for (var doc in eventsSnapshot.docs) {
+        String eventId = doc.id; // Event ID
+        String eventName = doc['eventName'] ?? 'Unnamed Event';
+
+        // Fetch the count of gifts associated with this event
+        QuerySnapshot giftsSnapshot = await _firestore
+            .collection('gifts') // Assume the collection name is 'gifts'
+            .where('eventId', isEqualTo: eventId)
+            .get();
+
+        events.add({
+          'eventId': eventId,
+          'eventName': eventName,
+          'giftCount': giftsSnapshot.size, // Number of gifts
+        });
+      }
+
+      return events;
+    } catch (e) {
+      print("Error fetching events: $e");
+      return [];
+    }
+  }
 
 }

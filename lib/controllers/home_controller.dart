@@ -207,5 +207,16 @@ class HomeController extends ChangeNotifier {
   }
 }
 
-  
+ // Fetch friend's events and associated gift counts
+Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
+  try {
+    // Replace this with your Firestore or backend logic
+    List<Map<String, dynamic>> events = await _firebaseService.getFriendEvents(friendId);
+    return events;
+  } catch (e) {
+    print("Error fetching friend's events: $e");
+    return [];
+  }
+}
+ 
 }
