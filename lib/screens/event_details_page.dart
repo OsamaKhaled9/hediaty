@@ -1,89 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:hediaty/db/database_helper.dart';
+import 'package:provider/provider.dart';
+import 'package:hediaty/controllers/event_controller.dart';
+import 'package:hediaty/core/models/event.dart';
+import 'package:hediaty/core/models/gift.dart';
 
-class EventDetailsPage extends StatefulWidget {
-  final int eventId;
-  const EventDetailsPage({super.key, required this.eventId});
+class EventDetailsPage extends StatelessWidget {
+  final String eventId;
 
-  @override
-  _EventDetailsPageState createState() => _EventDetailsPageState();
-}
-
-class _EventDetailsPageState extends State<EventDetailsPage> {
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
-  String _status = 'Upcoming';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadEventDetails();
-  }
-
-  // Load event details from database
-  _loadEventDetails() async {
-    final event = await DatabaseHelper.instance.queryEventById(widget.eventId);
-    setState(() {
-      _nameController.text = event['name'];
-      _descriptionController.text = event['description'];
-      _locationController.text = event['location'];
-      _status = event['status'];
-    });
-  }
-
-  // Save changes to event
-  _saveEvent() async {
-    final updatedEvent = {
-      'name': _nameController.text,
-      'description': _descriptionController.text,
-      'location': _locationController.text,
-      'status': _status,
-    };
-    await DatabaseHelper.instance.updateEvent(widget.eventId, updatedEvent);
-    Navigator.pop(context);
-  }
+  const EventDetailsPage({Key? key, required this.eventId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+     final String eventId =ModalRoute.of(context)!.settings.arguments as String;
+
+    final eventController = Provider.of<EventController>(context, listen: false);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Event')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Event Name'),
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
-            ),
-            TextField(
-              controller: _locationController,
-              decoration: const InputDecoration(labelText: 'Location'),
-            ),
-            DropdownButton<String>(
-              value: _status,
-              onChanged: (newValue) {
-                setState(() {
-                  _status = newValue!;
-                });
-              },
-              items: ['Upcoming', 'Current', 'Past']
-                  .map((status) => DropdownMenuItem<String>(
-                        value: status,
-                        child: Text(status),
-                      ))
-                  .toList(),
-            ),
-            ElevatedButton(
-              onPressed: _saveEvent,
-              child: const Text('Save Event'),
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: Text("Event Details"),
+      ),
+      body: StreamBuilder<Event?>(
+        stream: eventController.getEventStream(eventId),
+        builder: (context, eventSnapshot) {
+          if (eventSnapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          if (eventSnapshot.hasError) {
+            return Center(child: Text("Error: ${eventSnapshot.error}"));
+          }
+
+          Event? event = eventSnapshot.data;
+
+          if (event == null) {
+            return Center(child: Text("Event not found"));
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.name,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text("Date: ${event.date.toLocal()}".split(' ')[0]),
+                    SizedBox(height: 8),
+                    Text("Location: ${event.location}"),
+                    SizedBox(height: 8),
+                    Text("Description: ${event.description}"),
+                  ],
+                ),
+              ),
+              Divider(),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  "Gifts",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                child: StreamBuilder<List<Gift>>(
+                  stream: eventController.getGiftsStream(eventId),
+                  builder: (context, giftSnapshot) {
+                    if (giftSnapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    if (giftSnapshot.hasError) {
+                      return Center(child: Text("Error: ${giftSnapshot.error}"));
+                    }
+
+                    List<Gift> gifts = giftSnapshot.data ?? [];
+
+                    if (gifts.isEmpty) {
+                      return Center(child: Text("No gifts found for this event"));
+                    }
+
+                    return ListView.builder(
+                      itemCount: gifts.length,
+                      itemBuilder: (context, index) {
+                        final gift = gifts[index];
+                        return ListTile(
+                          title: Text(gift.name),
+                          subtitle: Text("Pledged by: ${gift.name}"),
+                          trailing: Text("\$${gift.price.toStringAsFixed(2)}"),
+                          onTap: () {
+                            // Handle gift details navigation
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

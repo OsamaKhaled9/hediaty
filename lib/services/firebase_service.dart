@@ -6,6 +6,8 @@ import 'package:hediaty/core/models/user.dart';  // Import your user model
 import 'package:crypto/crypto.dart';  // For hashing the password
 import 'dart:convert';  // For UTF-8 encoding
 import 'package:hediaty/core/models/friend.dart';  // Import friend model
+import 'package:hediaty/core/models/event.dart';  // Import event model
+import 'package:hediaty/core/models/gift.dart';  
 import 'package:hediaty/controllers/home_controller.dart';
 import 'package:uuid/uuid.dart';
 
@@ -313,6 +315,37 @@ Future<user?> getCurrentUser() async {
   }
   FirebaseFirestore getFirestoreInstance() {
   return _firestore;
+}
+Future<Event?> getEventDetails(String eventId) async {
+  try {
+    DocumentSnapshot eventDoc = await _firestore.collection('events').doc(eventId).get();
+
+    if (!eventDoc.exists) {
+      print("Event not found for ID: $eventId");
+      return null;
+    }
+
+    return Event.fromMap(eventDoc.data() as Map<String, dynamic>, eventDoc.id);
+  } catch (e) {
+    print("Error fetching event details: $e");
+    return null;
+  }
+}
+
+Future<List<Gift>> getEventGifts(String eventId) async {
+  try {
+    QuerySnapshot giftSnapshot = await _firestore
+        .collection('gifts')
+        .where('eventId', isEqualTo: eventId)
+        .get();
+
+    return giftSnapshot.docs.map((doc) {
+      return Gift.fromMap(doc.data() as Map<String, dynamic>);
+    }).toList();
+  } catch (e) {
+    print("Error fetching event gifts: $e");
+    return [];
+  }
 }
 
 }

@@ -7,14 +7,17 @@ import 'package:hediaty/screens/auth/landing_page.dart';
 import 'package:hediaty/screens/auth/login_page.dart';
 import 'package:hediaty/screens/home_page.dart';
 import 'package:hediaty/screens/event_list_page.dart'; 
+import 'package:hediaty/screens/event_details_page.dart'; 
 import 'package:hediaty/screens/gift_list_page.dart';
 import 'package:hediaty/screens/profile_page.dart';
 import 'package:hediaty/screens/edit_profile_details.dart';
+import 'package:hediaty/screens/create_edit_event_page.dart';
 import 'package:hediaty/screens/create_event_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:provider/provider.dart';
 import 'package:hediaty/controllers/home_controller.dart';
 import 'package:hediaty/controllers/user_controller.dart';
+import 'package:hediaty/controllers/event_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hediaty/core/models/user.dart';
 void main() async {
@@ -42,6 +45,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => HomeController()),
         ChangeNotifierProvider(create: (_) => UserController()),
+        ChangeNotifierProvider(create: (_) => EventController()), // Add EventController here
+
       ],
       child: MaterialApp(
         title: 'Hediaty',
@@ -74,12 +79,17 @@ class MyApp extends StatelessWidget {
             }
             return ProfilePage(userId: userId);
           },
-          '/event_list': (context) => EventListPage(),
+          '/event_list': (context) => EventListPage(), // Accessible here
           '/gift_list': (context) => GiftListPage(eventId: 1), // Replace 1 with dynamic data
           '/edit_profile_details': (context) {
               final user currentUser = ModalRoute.of(context)?.settings.arguments as user;
               return EditProfileDetails(currentUser: currentUser);
             },
+             //'/event_list': (context) => EventListPage(),
+             '/create_edit_event': (context) => CreateEditEventPage(),
+             '/event_details': (context) => EventDetailsPage(
+        eventId: ModalRoute.of(context)!.settings.arguments as String,
+      ),
         },
       ),
     );

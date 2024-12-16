@@ -111,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 leading: Icon(Icons.event),
                 title: Text("My Events"),
                 onTap: () {
-                  Navigator.pushNamed(context, '/events');
+                  Navigator.pushNamed(context, '/event_list');
                 },
               ),
               ListTile(

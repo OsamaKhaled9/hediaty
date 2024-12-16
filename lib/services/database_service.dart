@@ -5,6 +5,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // For FFI (Desktop platfo
 import 'package:hediaty/core/models/user.dart';  // Assuming you have a user model
 import 'package:flutter/foundation.dart'; // For Platform.isX on web and mobile
 import 'package:hediaty/core/models/friend.dart';  // Assuming you have a user model
+import 'package:hediaty/core/models/event.dart';  // Assuming you have a user model
+import 'package:hediaty/core/models/gift.dart';  // Assuming you have a user model
 import 'package:hediaty/controllers/home_controller.dart';
 
 
@@ -89,4 +91,29 @@ class DatabaseService {
         ? res.map((e) => Friend.fromJson(e)).toList()
         : [];
   }
+  Future<Event?> getLocalEventDetails(String eventId) async {
+  final db = await database;
+  final result = await db.query(
+    'events',
+    where: 'id = ?',
+    whereArgs: [eventId],
+  );
+
+  if (result.isNotEmpty) {
+    return Event.fromMap(result.first, eventId);
+  }
+
+  return null;
+}
+
+  Future<List<Gift>> getLocalEventGifts(String eventId) async {
+  final db = await database;
+  final result = await db.query(
+    'gifts',
+    where: 'eventId = ?',
+    whereArgs: [eventId],
+  );
+
+  return result.map((gift) => Gift.fromMap(gift)).toList();
+}
 }
