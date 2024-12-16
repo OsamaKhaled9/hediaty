@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hediaty/screens/event_list_page.dart';
 import 'package:hediaty/screens/gift_list_page.dart';
 import 'package:hediaty/utils/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Footer extends StatefulWidget {
   @override
@@ -45,8 +46,9 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Color(0xFF2A6BFF);
-    final backgroundColor = Color(0xFFADD8E6);
-    final textColor = Color(0xFF333333);
+
+    // Get the current user's ID from Firebase Auth
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
 
     return BottomNavigationBar(
       backgroundColor: Colors.white,
@@ -113,7 +115,19 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
           icon: GestureDetector(
             onTap: () {
               _playButtonAnimation();
-              Navigator.pushNamed(context, '/profile');
+              if (userId != null) {
+                Navigator.pushNamed(
+                  context,
+                  '/profile',
+                  arguments: userId, // Pass the userId as an argument
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error: User not logged in."),
+                  ),
+                );
+              }
             },
             child: AnimatedBuilder(
               animation: _buttonScaleAnimation,

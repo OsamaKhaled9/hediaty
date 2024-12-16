@@ -227,7 +227,7 @@ Future<void> addFriendToFirestore(Friend friend) async {
    // Get current logged-in user from Firebase
 Future<user?> getCurrentUser() async {
   User? firebaseUser = _auth.currentUser;
-  
+
   if (firebaseUser == null) {
     print("Firebase auth: No current user logged in.");
     return null;
@@ -235,19 +235,27 @@ Future<user?> getCurrentUser() async {
 
   try {
     DocumentSnapshot userData = await _firestore.collection('users').doc(firebaseUser.uid).get();
-    
+
     if (!userData.exists) {
       print("Firestore: No user data found for user ID ${firebaseUser.uid}");
       return null;
     }
 
-    print("Fetched user data: ${userData.data()}");
-    return user.fromMap(userData.data() as Map<String, dynamic>);
+    Map<String, dynamic> data = userData.data() as Map<String, dynamic>;
+    
+    // Validate the data before mapping
+    if (data.isEmpty || !data.containsKey('id')) {
+      print("Invalid user data: $data");
+      return null;
+    }
+
+    return user.fromMap(data);
   } catch (e) {
     print("Failed to fetch user data: $e");
     return null;
   }
 }
+
   Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
     try {
       // Query the `events` collection for the given friend ID
@@ -282,5 +290,29 @@ Future<user?> getCurrentUser() async {
       return [];
     }
   }
+     Future<user?> getUserById(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        print("User not found.");
+        return null;
+      }
+      return user.fromMap(userDoc.data() as Map<String, dynamic>);
+    } catch (e) {
+      print("Error fetching user: $e");
+      return null;
+    }
+  }
+
+  Future<void> updateUser(user updatedUser) async {
+    try {
+      await _firestore.collection('users').doc(updatedUser.id).update(updatedUser.toJson());
+    } catch (e) {
+      print("Error updating user: $e");
+    }
+  }
+  FirebaseFirestore getFirestoreInstance() {
+  return _firestore;
+}
 
 }
