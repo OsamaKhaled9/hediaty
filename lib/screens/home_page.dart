@@ -267,23 +267,21 @@ Widget build(BuildContext context) {
 
         // Friends List
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _filteredFriends.isEmpty
-                ? Center(
-                    child: Text(
-                      "No friends found",
-                      style: TextStyle(color: textColor),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredFriends.length,
-                    itemBuilder: (context, index) {
-                      return FriendListItem(friend: _filteredFriends[index]);
-                    },
-                  ),
-          ),
+  child: _filteredFriends.isEmpty
+    ? Center(
+        child: Text(
+          "No friends found",
+          style: TextStyle(color: textColor),
         ),
+      )
+    : ListView.builder(
+        padding: EdgeInsets.only(top: 0), // Remove top padding
+        itemCount: _filteredFriends.length,
+        itemBuilder: (context, index) {
+          return FriendListItem(friend: _filteredFriends[index]);
+        },
+      ),
+)
       ],
     ),
     floatingActionButton: FloatingActionButton(

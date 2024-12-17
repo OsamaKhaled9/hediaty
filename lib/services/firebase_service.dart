@@ -183,21 +183,29 @@ Future<void> addFriendToFirestore(Friend friend) async {
     }
   }
 
-  // Fetch the number of upcoming events for a specific friend
-  Future<int> getUpcomingEventsCount(String friendId) async {
-    try {
-      QuerySnapshot snapshot = await _firestore
-          .collection('events')  // Assuming events are stored in the 'events' collection
-          .where('friendId', isEqualTo: friendId)
-          .where('eventDate', isGreaterThan: Timestamp.now())  // Only future events
-          .get();
+Future<int> getUpcomingEventsCount(String friendId) async {
+  try {
+    QuerySnapshot snapshot = await _firestore
+        .collection('events')
+        .where('userId', isEqualTo: friendId) // Filter by friendId
+        .get();
 
-      return snapshot.docs.length;  // Return the count of upcoming events
-    } catch (e) {
-      print("Error fetching upcoming events count: $e");
-      return 0;  // Return 0 if there was an error
-    }
+    final now = DateTime.now();
+
+    // Count only events with future dates
+    int upcomingEventsCount = snapshot.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      DateTime eventDate = DateTime.parse(data['date']);
+      return eventDate.isAfter(now);
+    }).length;
+
+    return upcomingEventsCount;
+  } catch (e) {
+    print("Error fetching upcoming events count: $e");
+    return 0;
   }
+}
+
 
   // Get a user by phone number
   Future<user?> getUserByPhoneNumber(String phoneNumber) async {

@@ -208,15 +208,39 @@ class HomeController extends ChangeNotifier {
 }
 
  // Fetch friend's events and associated gift counts
-Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
+  // Fetch events for a specific friend based on their friendId
+   Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
   try {
-    // Replace this with your Firestore or backend logic
-    List<Map<String, dynamic>> events = await _firebaseService.getFriendEvents(friendId);
-    return events;
+    QuerySnapshot snapshot = await _firestore
+        .collection('events')
+        .where('userId', isEqualTo: friendId)
+        .get();
+
+    final now = DateTime.now();
+
+    // Filter and map only valid upcoming events
+    return snapshot.docs
+        .where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          DateTime eventDate = DateTime.parse(data['date']);
+          return eventDate.isAfter(now); // Only include upcoming events
+        })
+        .map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return {
+            'eventId': data['id'],
+            'eventName': data['name'],
+            'eventDate': data['date'],
+            'location': data['location'],
+            'description': data['description'],
+          };
+        })
+        .toList();
   } catch (e) {
     print("Error fetching friend's events: $e");
     return [];
   }
 }
+
  
 }
