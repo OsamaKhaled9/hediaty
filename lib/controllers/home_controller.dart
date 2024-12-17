@@ -116,19 +116,34 @@ class HomeController extends ChangeNotifier {
       throw Exception("No current user logged in.");
     }
 
-    DocumentSnapshot friendSnapshot = await FirebaseFirestore.instance.collection('users').doc(friendId).get();
+    // Fetch friend data
+    DocumentSnapshot friendSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(friendId)
+        .get();
+
     if (!friendSnapshot.exists) {
       print("Friend not found.");
       throw Exception("Friend not found.");
     }
-
     Map<String, dynamic> friendData = friendSnapshot.data() as Map<String, dynamic>;
-    if (friendData == null) {
-      print("Friend data is null.");
-      throw Exception("Friend data is not available.");
+
+    // Fetch current user data from Firestore
+    DocumentSnapshot currentUserSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .get();
+
+    if (!currentUserSnapshot.exists) {
+      print("Current user data not found in Firestore.");
+      throw Exception("Current user data not found in Firestore.");
     }
+    Map<String, dynamic> currentUserData =
+        currentUserSnapshot.data() as Map<String, dynamic>;
 
     var uuid = Uuid();
+
+    // Friend data for the current user
     Friend newFriend = Friend(
       id: uuid.v4(),
       userId: currentUser.uid,
@@ -138,12 +153,13 @@ class HomeController extends ChangeNotifier {
       upcomingEventsCount: 0,
     );
 
+    // Reciprocal friend data
     Friend reciprocalFriend = Friend(
       id: uuid.v4(),
       userId: friendId,
       friendId: currentUser.uid,
-      friendName: currentUser.displayName ?? 'Unknown',
-      friendAvatar: currentUser.photoURL ?? 'assets/images/default_avatar.png',
+      friendName: currentUserData['fullName'] as String? ?? 'Unknown',
+      friendAvatar: currentUserData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.png',
       upcomingEventsCount: 0,
     );
 
@@ -152,15 +168,15 @@ class HomeController extends ChangeNotifier {
     await _firebaseService.addFriendToFirestore(reciprocalFriend);
 
     // Optionally update local database and refresh friend list
-   /* await _databaseService.insertFriend(newFriend);
-    await _databaseService.insertFriend(reciprocalFriend);*/
-    print("currentUser.uid");
     await loadFriends(currentUser.uid);
+
+    print("Friend added successfully!");
   } catch (e) {
     print("Error adding friend: $e");
     throw Exception("Error adding friend: $e");
   }
 }
+
 
 
 
