@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart'; // For Platform.isX on web and mobile
 import 'package:hediaty/core/models/friend.dart';  // Assuming you have a user model
 import 'package:hediaty/core/models/event.dart';  // Assuming you have a user model
 import 'package:hediaty/core/models/gift.dart';  // Assuming you have a user model
-import 'package:hediaty/controllers/home_controller.dart';
 
 
 class DatabaseService {
@@ -116,4 +115,67 @@ class DatabaseService {
 
   return result.map((gift) => Gift.fromMap(gift)).toList();
 }
+  // 1. Insert Gift
+ Future<void> insertGift(Gift gift) async {
+    final db = await database;
+    try {
+      await db.insert(
+        'gifts',
+        gift.toJson(), // Correctly converts Gift to a Map
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print("Gift inserted/updated successfully: ${gift.id}");
+    } catch (e) {
+      print("Error inserting gift: $e");
+      throw Exception("Error inserting gift: $e");
+    }
+  }
+  // 2. Fetch Gifts by Event ID
+  Future<List<Gift>> getGiftsByEventId(String eventId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'gifts',
+      where: 'eventId = ?',
+      whereArgs: [eventId],
+    );
+
+    return List.generate(maps.length, (i) {
+      return Gift.fromMap(maps[i]);
+    });
+  }
+
+  // 3. Update Gift Status
+  Future<void> updateGiftStatus(String giftId, String status,
+      {String? pledgedBy}) async {
+    final db = await database;
+    await db.update(
+      'gifts',
+      {
+        'status': status,
+        'pledgedBy': pledgedBy,
+      },
+      where: 'id = ?',
+      whereArgs: [giftId],
+    );
+  }
+
+  // 4. Delete Gift
+  Future<void> deleteGift(String giftId) async {
+    final db = await database;
+    await db.delete(
+      'gifts',
+      where: 'id = ?',
+      whereArgs: [giftId],
+    );
+  }
+
+  // 5. Get All Gifts (for debugging or general use)
+  Future<List<Gift>> getAllGifts() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('gifts');
+    return List.generate(maps.length, (i) {
+      return Gift.fromMap(maps[i]);
+    });
+  }
+
 }

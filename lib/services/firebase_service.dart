@@ -355,5 +355,56 @@ Future<List<Gift>> getEventGifts(String eventId) async {
     return [];
   }
 }
+Future<void> createGift(Gift gift) async {
+  try {
+    await _firestore.collection('gifts').doc(gift.id).set(gift.toJson());
+    print("Gift created successfully: ${gift.id}");
+  } catch (e) {
+    print("Error creating gift: $e");
+    throw Exception("Error creating gift: $e");
+  }
+}
+
+
+Stream<List<Gift>> getGiftsByEvent(String eventId) {
+  return _firestore
+      .collection('gifts')
+      .where('eventId', isEqualTo: eventId)
+      .snapshots()
+      .map((snapshot) =>
+          snapshot.docs.map((doc) => Gift.fromMap(doc.data())).toList());
+}
+
+Future<void> updateGiftStatus(String giftId, String status, String? pledgerId) async {
+  await _firestore.collection('gifts').doc(giftId).update({
+    'status': status,
+    'pledgedBy': pledgerId,
+  });
+}
+
+Future<void> deleteGift(String giftId) async {
+  await _firestore.collection('gifts').doc(giftId).delete();
+}
+
+Stream<List<Gift>> getGiftsByPledger(String userId) {
+  return _firestore
+      .collection('gifts')
+      .where('pledgedBy', isEqualTo: userId)
+      .snapshots()
+      .map((snapshot) =>
+          snapshot.docs.map((doc) => Gift.fromMap(doc.data())).toList());
+}
+Future<Gift?> getGiftById(String giftId) async {
+  try {
+    DocumentSnapshot doc = await _firestore.collection('gifts').doc(giftId).get();
+    if (doc.exists) {
+      return Gift.fromMap(doc.data() as Map<String, dynamic>);
+    }
+    return null;
+  } catch (e) {
+    print("Error fetching gift by ID: $e");
+    return null;
+  }
+}
 
 }

@@ -97,7 +97,7 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
           icon: GestureDetector(
             onTap: () {
               _playButtonAnimation();
-              Navigator.pushNamed(context, '/gifts');
+              Navigator.pushNamed(context, '/gift_list');
             },
             child: AnimatedBuilder(
               animation: _buttonScaleAnimation,

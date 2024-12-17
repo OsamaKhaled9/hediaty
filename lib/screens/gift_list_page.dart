@@ -1,63 +1,56 @@
 import 'package:flutter/material.dart';
-import 'gift_details_page.dart'; // For navigating to gift details
-import 'package:hediaty/db/database_helper.dart';
+import 'package:hediaty/controllers/gift_controller.dart';
+import 'package:hediaty/core/models/gift.dart';
+import 'package:provider/provider.dart';
+import 'package:hediaty/widgets/gift_list_item.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class GiftListPage extends StatefulWidget {
-  final int eventId;
-  const GiftListPage({super.key, required this.eventId});
+class GiftListPage extends StatelessWidget {
+  final String eventId;
 
-  @override
-  _GiftListPageState createState() => _GiftListPageState();
-}
-
-class _GiftListPageState extends State<GiftListPage> {
-  List<Map<String, dynamic>> _gifts = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadGifts();
-  }
-
-  // Load gifts from the database using eventId
-  _loadGifts() async {
-    final gifts = await DatabaseHelper.instance.queryGiftsByEvent(widget.eventId);
-    setState(() {
-      _gifts = gifts;
-    });
-  }
+  const GiftListPage({Key? key, required this.eventId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final giftController = Provider.of<GiftController>(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gift List'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.pushNamed(context, '/create_gift', arguments: widget.eventId);
-            },
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: _gifts.length,
-        itemBuilder: (context, index) {
-          var gift = _gifts[index];
-          return ListTile(
-            title: Text(gift['gift_name']),
-            subtitle: Text('Status: ${gift['status']}'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => GiftDetailsPage(giftId: gift['id']),
-                ),
+      appBar: AppBar(title: Text("Gifts")),
+      body: StreamBuilder<List<Gift>>(
+        stream: giftController.getGifts(eventId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          List<Gift> gifts = snapshot.data ?? [];
+          if (gifts.isEmpty) {
+            return Center(child: Text("No gifts found for this event."));
+          }
+
+          return ListView.builder(
+            itemCount: gifts.length,
+            itemBuilder: (context, index) {
+              return GiftListItem(
+                gift: gifts[index],
+                onPledge: () {
+                  // Update gift status to 'Pledged'
+                  giftController.updateGiftStatus(
+                      gifts[index].id, 'Pledged', FirebaseAuth.instance.currentUser!.uid);
+                },
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to add/edit gift page
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
