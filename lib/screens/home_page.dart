@@ -5,7 +5,8 @@ import 'package:hediaty/core/models/friend.dart';
 import 'package:provider/provider.dart';
 import 'package:hediaty/widgets/footer.dart';
 import 'package:hediaty/widgets/friend_list_item.dart';
-import 'package:hediaty/screens/create_event_page.dart';
+import 'package:hediaty/screens/create_edit_event_page.dart';
+import 'package:hediaty/controllers/event_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -96,7 +97,7 @@ class _HomePageState extends State<HomePage> {
 @override
 Widget build(BuildContext context) {
   final homeController = Provider.of<HomeController>(context, listen: false);
-
+  final eventController = Provider.of<EventController>(context, listen: false);
   return Scaffold(
     backgroundColor: Colors.white,
     body: Column(
@@ -177,14 +178,29 @@ Widget build(BuildContext context) {
                               ),
                             ),
                             SizedBox(height: 4),
-                            Text(
-                              "You have ${currentUser.fullName} upcoming events",
-                              style: TextStyle(fontSize: 16, color: textColor),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
+                             // Event Count
+                                  FutureBuilder<int>(
+                                    future: eventController.getEventCount(currentUser.id),
+                                    builder: (context, eventSnapshot) {
+                                      if (eventSnapshot.connectionState == ConnectionState.waiting) {
+                                        return Text("Loading events...", style: TextStyle(color: textColor));
+                                      }
+                                      if (eventSnapshot.hasError) {
+                                        return Text("Error loading events", style: TextStyle(color: textColor));
+                                      }
+
+                                      final eventCount = eventSnapshot.data ?? 0;
+
+                                      return Text(
+                                        "You have $eventCount events",
+                                        style: TextStyle(fontSize: 16, color: textColor),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
                   
                       },
                     );
@@ -199,7 +215,7 @@ Widget build(BuildContext context) {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CreateEventPage()),
+                      MaterialPageRoute(builder: (context) => CreateEditEventPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

@@ -94,5 +94,18 @@ Stream<List<Gift>> getGiftsStream(String eventId) {
   });
 }
 
+ // Fetch the count of events associated with the current user
+  Future<int> getEventCount(String userId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('events')
+          .where('userId', isEqualTo: userId)
+          .get();
 
+      return querySnapshot.size; // Returns the number of documents
+    } catch (e) {
+      print("Error fetching event count: $e");
+      return 0;
+    }
+  }
 }

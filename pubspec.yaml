@@ -45,6 +45,8 @@ dependencies:
   cached_network_image: ^3.2.3 # for caching images
   font_awesome_flutter: ^10.7.0  # Use the latest stable version
   uuid: ^3.0.4
+  intl: ^0.20.1  # Use the latest version
+
 
 
 
