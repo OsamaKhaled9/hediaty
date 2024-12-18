@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hediaty/controllers/gift_controller.dart';
 import 'package:hediaty/core/models/gift.dart';
+import 'package:hediaty/widgets/custom_text_field.dart';
+import 'package:hediaty/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 class CreateEditGiftPage extends StatefulWidget {
   final Gift? gift;
-  final String eventId; // Required to associate the gift with an event
+  final String eventId;
 
   const CreateEditGiftPage({Key? key, this.gift, required this.eventId}) : super(key: key);
 
@@ -17,40 +19,53 @@ class CreateEditGiftPage extends StatefulWidget {
 class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form fields
-  late String _name;
-  late String _description;
-  late String _category;
-  late double _price;
+  // Controllers for text fields
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _categoryController;
+  late TextEditingController _priceController;
+
+  // Other form fields
   late String _imagePath;
   late String _status;
 
   @override
   void initState() {
     super.initState();
-    // Preload form with gift data if editing
-    _name = widget.gift?.name ?? '';
-    _description = widget.gift?.description ?? '';
-    _category = widget.gift?.category ?? '';
-    _price = widget.gift?.price ?? 0.0;
+    // Initialize controllers with existing gift data or empty strings
+    _nameController = TextEditingController(text: widget.gift?.name ?? '');
+    _descriptionController = TextEditingController(text: widget.gift?.description ?? '');
+    _categoryController = TextEditingController(text: widget.gift?.category ?? '');
+    _priceController = TextEditingController(
+      text: widget.gift?.price != null ? widget.gift!.price.toString() : ''
+    );
+
     _imagePath = widget.gift?.imagePath ?? 'assets/images/default_gift.png';
     _status = widget.gift?.status ?? 'Available';
   }
 
+  @override
+  void dispose() {
+    // Dispose controllers to prevent memory leaks
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _categoryController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
   void _saveGift() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
       final giftController = Provider.of<GiftController>(context, listen: false);
 
       // Create or update gift
       final newGift = Gift(
         id: widget.gift?.id ?? const Uuid().v4(),
-        eventId: widget.eventId, // Ensure the eventId is set
-        name: _name,
-        description: _description,
-        category: _category,
-        price: _price,
+        eventId: widget.eventId,
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _categoryController.text.trim(),
+        price: double.parse(_priceController.text.trim()),
         imagePath: _imagePath,
         status: _status,
       );
@@ -60,8 +75,7 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
         await giftController.addGift(newGift);
       } else {
         // Update the existing gift
-        newGift.id; 
-        await giftController.updateGiftStatus(newGift.id, newGift.status,newGift.pledgedBy);
+        await giftController.updateGiftStatus(newGift.id, newGift.status, newGift.pledgedBy);
       }
 
       Navigator.pop(context); // Return to the previous page
@@ -69,10 +83,9 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
   }
 
   void _selectImage() async {
-    // Dummy image selection for demonstration purposes
-    // Replace with your image picker logic
+    // TODO: Implement actual image picker
     setState(() {
-      _imagePath = 'assets/images/sample_gift.png'; // Example image path
+      _imagePath = 'assets/images/sample_gift.png';
     });
   }
 
@@ -81,53 +94,69 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.gift == null ? "Create Gift" : "Edit Gift"),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              // Changed from SingleChildScrollView to ListView
+              shrinkWrap: true, // Add this to prevent unnecessary scrolling
               children: [
-                TextFormField(
-                  initialValue: _name,
-                  decoration: InputDecoration(labelText: "Gift Name"),
-                  validator: (value) => value!.isEmpty ? "Enter a gift name" : null,
-                  onSaved: (value) => _name = value!,
+                CustomTextField(
+                  controller: _nameController,
+                  labelText: "Gift Name",
+                  icon: Icons.card_giftcard,
                 ),
-                TextFormField(
-                  initialValue: _description,
-                  decoration: InputDecoration(labelText: "Description"),
-                  validator: (value) => value!.isEmpty ? "Enter a description" : null,
-                  onSaved: (value) => _description = value!,
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _descriptionController,
+                  labelText: "Description",
+                  icon: Icons.description,
                 ),
-                TextFormField(
-                  initialValue: _category,
-                  decoration: InputDecoration(labelText: "Category"),
-                  validator: (value) => value!.isEmpty ? "Enter a category" : null,
-                  onSaved: (value) => _category = value!,
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _categoryController,
+                  labelText: "Category",
+                  icon: Icons.category,
                 ),
-                TextFormField(
-                  initialValue: _price > 0 ? _price.toString() : '',
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: "Price"),
-                  validator: (value) =>
-                      value!.isEmpty || double.tryParse(value) == null
-                          ? "Enter a valid price"
-                          : null,
-                  onSaved: (value) => _price = double.parse(value!),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _priceController,
+                  labelText: "Price",
+                  icon: Icons.attach_money,
+                  keyboardType: TextInputType.number, // Updated to use correct parameter name
                 ),
-                SizedBox(height: 16),
-                Text("Image Path: $_imagePath"),
-                TextButton(
-                  onPressed: _selectImage,
-                  child: Text("Select Image"),
+                const SizedBox(height: 16),
+                // Image Selection Section
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFF2A6BFF)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Image: $_imagePath",
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      CustomButton(
+                        label: "Select Image",
+                        onPressed: _selectImage,
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 16),
-                ElevatedButton(
+                const SizedBox(height: 24),
+                CustomButton(
+                  label: "Save Gift",
                   onPressed: _saveGift,
-                  child: Text("Save"),
                 ),
               ],
             ),
