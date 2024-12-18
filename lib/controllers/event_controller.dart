@@ -88,7 +88,7 @@ class EventController extends ChangeNotifier {
         final eventIdFromData = data['id'] ?? doc.id;
         final event = Event.fromMap(data as Map<String, dynamic>, eventIdFromData);
         // Update local database
-        _databaseService.insertEvent(event);
+        //_databaseService.insertEvent(event);
         return event;
       } catch (e) {
         print("Error parsing Event data: $e");

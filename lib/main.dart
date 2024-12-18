@@ -1,3 +1,4 @@
+///*
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -92,9 +93,11 @@ class MyApp extends StatelessWidget {
             return GiftListPage(eventId: eventId);
           },
           '/create_edit_gift': (context) {
-            final Gift? gift = ModalRoute.of(context)?.settings.arguments as Gift?;
-            return CreateEditGiftPage(gift: gift);
-          },
+              final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+              final Gift? gift = args['gift'] as Gift?;
+              final String eventId = args['eventId'] as String;
+              return CreateEditGiftPage(gift: gift, eventId: eventId);
+            },
           '/gift_details': (context) {
             final String giftId = ModalRoute.of(context)!.settings.arguments as String;
             return GiftDetailsPage(giftId: giftId);
@@ -109,65 +112,90 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+//*/
 /*
 import 'package:flutter/material.dart';
 import 'package:hediaty/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   final databaseService = DatabaseService();
-  await viewAllDatabaseContents(databaseService);
-
-  runApp(const MyApp());
-}
-
-Future<void> viewAllDatabaseContents(DatabaseService databaseService) async {
-  final db = await databaseService.database;
-
-  try {
-    print("Users Table:");
-    final users = await db.query('users');
-    for (var user in users) {
-      print(user);
-    }
-
-    print("Friends Table:");
-    final friends = await db.query('friends');
-    for (var friend in friends) {
-      print(friend);
-    }
-
-    print("Events Table:");
-    final events = await db.query('events');
-    for (var event in events) {
-      print(event);
-    }
-
-    print("Gifts Table:");
-    final gifts = await db.query('gifts');
-    for (var gift in gifts) {
-      print(gift);
-    }
-
-  } catch (e) {
-    print("Error viewing database contents: $e");
-  }
+  runApp(MyApp(databaseService: databaseService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final DatabaseService databaseService;
+
+  const MyApp({Key? key, required this.databaseService}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Database Viewer',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Database Viewer')),
-        body: const Center(child: Text('Check the console for database output')),
+      home: DatabaseViewerPage(databaseService: databaseService),
+    );
+  }
+}
+
+class DatabaseViewerPage extends StatelessWidget {
+  final DatabaseService databaseService;
+
+  const DatabaseViewerPage({Key? key, required this.databaseService})
+      : super(key: key);
+
+  Future<Map<String, List<Map<String, dynamic>>>> _getDatabaseContents() async {
+    final db = await databaseService.database;
+
+    return {
+      "Users": await db.query('users'),
+      "Friends": await db.query('friends'),
+      "Events": await db.query('events'),
+      "Gifts": await db.query('gifts'),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Database Viewer')),
+      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+        future: _getDatabaseContents(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
+
+          final databaseContents = snapshot.data ?? {};
+
+          return ListView(
+            children: databaseContents.entries.map((entry) {
+              return ExpansionTile(
+                title: Text('${entry.key} Table'),
+                children: entry.value.isEmpty
+                    ? [
+                        const ListTile(
+                          title: Text('No records found'),
+                        ),
+                      ]
+                    : entry.value.map((row) {
+                        return ListTile(
+                          title: Text(row.toString()),
+                        );
+                      }).toList(),
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }
 }
+
 */

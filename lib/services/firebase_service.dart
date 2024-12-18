@@ -266,39 +266,51 @@ Future<user?> getCurrentUser() async {
 }
 
   Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
-    try {
-      // Query the `events` collection for the given friend ID
-      QuerySnapshot eventsSnapshot = await _firestore
-          .collection('events') // Assume the collection name is 'events'
-          .where('friendId', isEqualTo: friendId)
+  try {
+    // Query the `events` collection for the given user ID (friendId)
+    QuerySnapshot eventsSnapshot = await _firestore
+        .collection('events') // Collection name is 'events'
+        .where('userId', isEqualTo: friendId) // Match userId with friendId
+        .get();
+
+    // Initialize an empty list to store event data
+    List<Map<String, dynamic>> events = [];
+
+    for (var doc in eventsSnapshot.docs) {
+      // Extract event details
+      String eventId = doc.id; // Event ID
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+      // Ensure the required fields exist in the document
+      String eventName = data['name'] ?? 'Unnamed Event';
+      String eventDate = data['date'] ?? ''; // Ensure the format matches
+      String location = data['location'] ?? '';
+      String description = data['description'] ?? '';
+
+      // Fetch the count of gifts associated with this event
+      QuerySnapshot giftsSnapshot = await _firestore
+          .collection('gifts') // Collection name is 'gifts'
+          .where('eventId', isEqualTo: eventId) // Match gifts by event ID
           .get();
 
-      // Map each document to a Map containing event details and gift count
-      List<Map<String, dynamic>> events = [];
-
-      for (var doc in eventsSnapshot.docs) {
-        String eventId = doc.id; // Event ID
-        String eventName = doc['eventName'] ?? 'Unnamed Event';
-
-        // Fetch the count of gifts associated with this event
-        QuerySnapshot giftsSnapshot = await _firestore
-            .collection('gifts') // Assume the collection name is 'gifts'
-            .where('eventId', isEqualTo: eventId)
-            .get();
-
-        events.add({
-          'eventId': eventId,
-          'eventName': eventName,
-          'giftCount': giftsSnapshot.size, // Number of gifts
-        });
-      }
-
-      return events;
-    } catch (e) {
-      print("Error fetching events: $e");
-      return [];
+      // Add event details and gift count to the list
+      events.add({
+        'eventId': eventId,
+        'eventName': eventName,
+        'eventDate': eventDate,
+        'location': location,
+        'description': description,
+        'giftCount': giftsSnapshot.size, // Number of gifts
+      });
     }
+
+    return events; // Return the list of events with details
+  } catch (e) {
+    print("Error fetching events: $e");
+    return [];
   }
+}
+
      Future<user?> getUserById(String userId) async {
     try {
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();

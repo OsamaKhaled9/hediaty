@@ -207,34 +207,41 @@ Future<void> insertUser(user user) async {
   return result.map((gift) => Gift.fromMap(gift)).toList();
 }
   // 1. Insert Gift
- Future<void> insertGift(Gift gift) async {
-    final db = await database;
-    try {
-      await db.insert(
-        'gifts',
-        gift.toJson(), // Correctly converts Gift to a Map
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      print("Gift inserted/updated successfully: ${gift.id}");
-    } catch (e) {
-      print("Error inserting gift: $e");
-      throw Exception("Error inserting gift: $e");
-    }
+Future<void> insertGift(Gift gift) async {
+  final db = await database;
+  try {
+    print("Inserting gift: ${gift.toJson()}");
+    await db.insert(
+      'gifts',
+      gift.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print("Gift inserted successfully: ${gift.id}");
+  } catch (e) {
+    print("Error inserting gift: $e");
+    throw Exception("Error inserting gift: $e");
   }
+}
+
   // 2. Fetch Gifts by Event ID
-  Future<List<Gift>> getGiftsByEventId(String eventId) async {
-    final db = await database;
+Future<List<Gift>> getGiftsByEventId(String eventId) async {
+  final db = await database;
+  try {
+    print("Fetching gifts for eventId: $eventId");
     final List<Map<String, dynamic>> maps = await db.query(
       'gifts',
       where: 'eventId = ?',
       whereArgs: [eventId],
     );
-  print("Gifts fetched from local storage: $maps"); // Debugging
-
-    return List.generate(maps.length, (i) {
-      return Gift.fromMap(maps[i]);
-    });
+    print("Gifts fetched from local database: $maps");
+    return maps.map((map) => Gift.fromMap(map)).toList();
+  } catch (e) {
+    print("Error fetching gifts: $e");
+    return [];
   }
+}
+
+
 
   // 3. Update Gift Status
   Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {

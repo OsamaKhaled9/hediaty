@@ -88,9 +88,10 @@ class EventDetailsPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/create_edit_gift',
-                          arguments: null, // Pass null for creating a new gift
-                        );
+                          arguments: {'eventId': currentEventId // Pass the eventId to the page                        );
                       },
+                        );
+                      }
                     ),
                   ),
                 ],
@@ -176,64 +177,70 @@ class EventDetailsPage extends StatelessWidget {
 
     // Build Gifts List
   Widget _buildGiftsList(EventController eventController, String eventId) {
-    return FutureBuilder<List<Gift>>(
-      future: eventController.getGiftsByEventId(eventId), // Fetch gifts locally
-      builder: (context, giftSnapshot) {
-        if (giftSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
+  return FutureBuilder<List<Gift>>(
+    future: eventController.getGiftsByEventId(eventId), // Fetch gifts locally
+    builder: (context, giftSnapshot) {
+      if (giftSnapshot.connectionState == ConnectionState.waiting) {
+        return Center(child: CircularProgressIndicator());
+      }
 
-        if (giftSnapshot.hasError) {
-          return Center(
-              child: Text("Error loading gifts: ${giftSnapshot.error}"));
-        }
+      if (giftSnapshot.hasError) {
+        return Center(
+          child: Text("Error loading gifts: ${giftSnapshot.error}"),
+        );
+      }
 
-        List<Gift> gifts = giftSnapshot.data ?? [];
+      List<Gift> gifts = giftSnapshot.data ?? [];
 
-        if (gifts.isEmpty) {
-          return Center(
-              child: Text(
+      if (gifts.isEmpty) {
+        print("No gifts found in local database for eventId: $eventId");
+        return Center(
+          child: Text(
             "No gifts found for this event.",
             style: TextStyle(color: Colors.grey),
-          ));
-        }
-
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: gifts.length,
-          separatorBuilder: (context, index) => Divider(
-            color: Color(0xFFADD8E6),
-            height: 1,
           ),
-          itemBuilder: (context, index) {
-            final gift = gifts[index];
-            return ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 0),
-              title: Text(
-                gift.name,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text("Category: ${gift.category}"),
-              trailing: Text(
-                "\$${gift.price.toStringAsFixed(2)}",
-                style: TextStyle(
-                  color: Color(0xFF2A6BFF),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () {
-                // Navigate to edit the selected gift
-                Navigator.pushNamed(
-                  context,
-                  '/create_edit_gift',
-                  arguments: gift,
-                );
-              },
-            );
-          },
         );
-      },
-    );
-  }
+      }
+
+      print("Gifts fetched for eventId $eventId: ${gifts.map((g) => g.toJson())}");
+
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: gifts.length,
+        separatorBuilder: (context, index) => Divider(
+          color: Color(0xFFADD8E6),
+          height: 1,
+        ),
+        itemBuilder: (context, index) {
+          final gift = gifts[index];
+          return ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 0),
+            title: Text(
+              gift.name,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Category: ${gift.category}"),
+            trailing: Text(
+              "\$${gift.price.toStringAsFixed(2)}",
+              style: TextStyle(
+                color: Color(0xFF2A6BFF),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onTap: () {
+              // Navigate to edit the selected gift
+              Navigator.pushNamed(
+                context,
+                '/create_edit_gift',
+                arguments: gift,
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
 }

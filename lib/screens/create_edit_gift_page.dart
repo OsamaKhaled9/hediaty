@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 class CreateEditGiftPage extends StatefulWidget {
-  final Gift? gift; // Null for creating a new gift, otherwise editing
+  final Gift? gift;
+  final String eventId; // Required to associate the gift with an event
 
-  const CreateEditGiftPage({Key? key, this.gift}) : super(key: key);
+  const CreateEditGiftPage({Key? key, this.gift, required this.eventId}) : super(key: key);
 
   @override
   _CreateEditGiftPageState createState() => _CreateEditGiftPageState();
@@ -22,7 +23,7 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
   late String _category;
   late double _price;
   late String _imagePath;
-  String _status = 'Available';
+  late String _status;
 
   @override
   void initState() {
@@ -41,9 +42,11 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
       _formKey.currentState!.save();
 
       final giftController = Provider.of<GiftController>(context, listen: false);
+
+      // Create or update gift
       final newGift = Gift(
         id: widget.gift?.id ?? const Uuid().v4(),
-        eventId: widget.gift?.eventId ?? '', // Should be provided during navigation
+        eventId: widget.eventId, // Ensure the eventId is set
         name: _name,
         description: _description,
         category: _category,
@@ -53,13 +56,24 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
       );
 
       if (widget.gift == null) {
+        // Add a new gift
         await giftController.addGift(newGift);
       } else {
-        await giftController.addGift(newGift);
+        // Update the existing gift
+        newGift.id; 
+        await giftController.updateGiftStatus(newGift.id, newGift.status,newGift.pledgedBy);
       }
 
-      Navigator.pop(context);
+      Navigator.pop(context); // Return to the previous page
     }
+  }
+
+  void _selectImage() async {
+    // Dummy image selection for demonstration purposes
+    // Replace with your image picker logic
+    setState(() {
+      _imagePath = 'assets/images/sample_gift.png'; // Example image path
+    });
   }
 
   @override
@@ -95,17 +109,21 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
                   onSaved: (value) => _category = value!,
                 ),
                 TextFormField(
-                  initialValue: _price.toString(),
+                  initialValue: _price > 0 ? _price.toString() : '',
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(labelText: "Price"),
-                  validator: (value) => value!.isEmpty || double.tryParse(value) == null
-                      ? "Enter a valid price"
-                      : null,
+                  validator: (value) =>
+                      value!.isEmpty || double.tryParse(value) == null
+                          ? "Enter a valid price"
+                          : null,
                   onSaved: (value) => _price = double.parse(value!),
                 ),
                 SizedBox(height: 16),
-                // Image Selector Placeholder
                 Text("Image Path: $_imagePath"),
+                TextButton(
+                  onPressed: _selectImage,
+                  child: Text("Select Image"),
+                ),
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _saveGift,
