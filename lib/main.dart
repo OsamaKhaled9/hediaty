@@ -78,10 +78,10 @@ class MyApp extends StatelessWidget {
             final userId = FirebaseAuth.instance.currentUser?.uid;
             return ProfilePage(userId: userId ?? '');
           },
-          /*'/edit_profile': (context) {
+          '/edit_profile_details': (context) {
             final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-            return EditProfileDetails(user: args?['user']);
-          },*/
+            return EditProfileDetails(currentUser: args?['user']);
+          },
           '/event_list': (context) => EventListPage(),
           '/event_details': (context) {
             final String eventId = ModalRoute.of(context)!.settings.arguments as String;
