@@ -109,3 +109,65 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+/*
+import 'package:flutter/material.dart';
+import 'package:hediaty/services/database_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final databaseService = DatabaseService();
+  await viewAllDatabaseContents(databaseService);
+
+  runApp(const MyApp());
+}
+
+Future<void> viewAllDatabaseContents(DatabaseService databaseService) async {
+  final db = await databaseService.database;
+
+  try {
+    print("Users Table:");
+    final users = await db.query('users');
+    for (var user in users) {
+      print(user);
+    }
+
+    print("Friends Table:");
+    final friends = await db.query('friends');
+    for (var friend in friends) {
+      print(friend);
+    }
+
+    print("Events Table:");
+    final events = await db.query('events');
+    for (var event in events) {
+      print(event);
+    }
+
+    print("Gifts Table:");
+    final gifts = await db.query('gifts');
+    for (var gift in gifts) {
+      print(gift);
+    }
+
+  } catch (e) {
+    print("Error viewing database contents: $e");
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Database Viewer',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Database Viewer')),
+        body: const Center(child: Text('Check the console for database output')),
+      ),
+    );
+  }
+}*/
+

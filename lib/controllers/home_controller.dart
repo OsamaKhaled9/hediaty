@@ -149,7 +149,7 @@ class HomeController extends ChangeNotifier {
       userId: currentUser.uid,
       friendId: friendId,
       friendName: friendData['fullName'] as String? ?? 'Unknown',
-      friendAvatar: friendData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.png',
+      friendAvatar: friendData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.JPG',
       upcomingEventsCount: 0,
     );
 
@@ -159,7 +159,7 @@ class HomeController extends ChangeNotifier {
       userId: friendId,
       friendId: currentUser.uid,
       friendName: currentUserData['fullName'] as String? ?? 'Unknown',
-      friendAvatar: currentUserData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.png',
+      friendAvatar: currentUserData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.JPG',
       upcomingEventsCount: 0,
     );
 

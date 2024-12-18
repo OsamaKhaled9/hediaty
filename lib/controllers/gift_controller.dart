@@ -7,104 +7,82 @@ class GiftController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
   final DatabaseService _databaseService = DatabaseService();
 
-  /// Fetch gifts for a specific event from local storage
+  // Stream gifts locally from SQLite for a specific event
   Stream<List<Gift>> getGiftsStream(String eventId) async* {
     try {
-      // Get local gifts first
-      final List<Gift> localGifts = await _databaseService.getGiftsByEventId(eventId);
-
-      // Fetch Firestore gifts to merge with local ones
-      _firebaseService.getGiftsByEvent(eventId).listen((firestoreGifts) async {
-        final mergedGifts = _mergeGifts(localGifts, firestoreGifts);
-        yield mergedGifts;
-      });
+      final List<Gift> gifts = await _databaseService.getGiftsByEventId(eventId);
+      yield gifts;
     } catch (e) {
-      print("Error fetching gifts stream: $e");
+      print("Error fetching gifts from local storage: $e");
       yield [];
     }
   }
 
-  /// Add a new gift to local storage
-  Future<void> addGift(Gift gift) async {
+  // Add Gift locally and optionally sync to Firestore when published
+  Future<void> addGift(Gift gift, {bool publish = false}) async {
     try {
       await _databaseService.insertGift(gift); // Add gift locally
+      if (publish) {
+        await _firebaseService.createGift(gift); // Sync with Firestore
+      }
       notifyListeners();
     } catch (e) {
-      print("Error adding gift locally: $e");
+      print("Error adding gift: $e");
     }
   }
 
-  /// Publish gifts to Firestore
+  // Publish all unpublished gifts for an event
   Future<void> publishGifts(String eventId) async {
     try {
-      final List<Gift> unpublishedGifts = await _databaseService.getUnpublishedGiftsByEventId(eventId);
-
-      for (final gift in unpublishedGifts) {
-        await _firebaseService.createGift(gift); // Publish to Firestore
-        await _databaseService.markGiftAsPublished(gift.id); // Update local status
+      final gifts = await _databaseService.getGiftsByEventId(eventId);
+      for (var gift in gifts) {
+        await _firebaseService.createGift(gift);
       }
-
-      print("Successfully published gifts for event $eventId");
       notifyListeners();
+      print("All gifts for event $eventId are published.");
     } catch (e) {
       print("Error publishing gifts: $e");
     }
   }
 
-  /// Update the status of a gift locally and sync with Firestore if necessary
+  // Update Gift Status (e.g., Pledge Gift)
   Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
     try {
+      await _firebaseService.updateGiftStatus(giftId, status, pledgedBy);
       await _databaseService.updateGiftStatus(giftId, status, pledgedBy); // Update locally
-      await _firebaseService.updateGiftStatus(giftId, status, pledgedBy); // Sync with Firestore
       notifyListeners();
     } catch (e) {
       print("Error updating gift status: $e");
     }
   }
 
-  /// Delete a gift locally and from Firestore if published
-  Future<void> deleteGift(String giftId, {bool isPublished = false}) async {
+  // Pledge a gift if it is available
+  Future<void> pledgeGift(String giftId, String userId) async {
     try {
-      await _databaseService.deleteGift(giftId); // Remove locally
+      Gift? gift = await _firebaseService.getGiftById(giftId);
 
-      if (isPublished) {
-        await _firebaseService.deleteGift(giftId); // Delete from Firestore if published
+      if (gift != null && gift.status == 'Available') {
+        await updateGiftStatus(giftId, 'Pledged', userId);
+        print("Gift successfully pledged!");
+      } else {
+        print("Gift is not available for pledging.");
       }
-
-      notifyListeners();
     } catch (e) {
-      print("Error deleting gift: $e");
+      print("Error pledging gift: $e");
     }
   }
 
-  /// Merge local and Firestore gifts, prioritizing local unpublished gifts
-  List<Gift> _mergeGifts(List<Gift> localGifts, List<Gift> firestoreGifts) {
-    final Map<String, Gift> giftMap = {};
-
-    // Add Firestore gifts
-    for (final gift in firestoreGifts) {
-      giftMap[gift.id] = gift;
-    }
-
-    // Overwrite with local unpublished gifts
-    for (final gift in localGifts) {
-      giftMap[gift.id] = gift;
-    }
-
-    return giftMap.values.toList();
-  }
-
-  /// Fetch pledged gifts for a specific user
+  // Stream pledged gifts for a specific user
   Stream<List<Gift>> getPledgedGifts(String userId) {
     return _firebaseService.getGiftsByPledger(userId);
   }
 
-  /// Fetch a gift's details
+  // Fetch gift details locally
   Future<Gift?> getGiftDetails(String giftId) async {
     try {
-      return await _databaseService.getGiftById(giftId); // Check local first
+      return await _databaseService.getGiftById(giftId);
     } catch (e) {
-      print("Error fetching gift details locally: $e");
+      print("Error fetching gift details: $e");
       return null;
     }
   }

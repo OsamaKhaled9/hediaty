@@ -1,54 +1,89 @@
-import 'dart:io';  // For platform-specific imports
-import 'package:path/path.dart';  // To help with file paths
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // For FFI (Desktop platforms)
-// For mobile (Android/iOS)
-import 'package:hediaty/core/models/user.dart';  // Assuming you have a user model
-import 'package:flutter/foundation.dart'; // For Platform.isX on web and mobile
-import 'package:hediaty/core/models/friend.dart';  // Assuming you have a user model
-import 'package:hediaty/core/models/event.dart';  // Assuming you have a user model
-import 'package:hediaty/core/models/gift.dart';  // Assuming you have a user model
-
+//import 'dart:io';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:hediaty/core/models/user.dart';
+import 'package:hediaty/core/models/friend.dart';
+import 'package:hediaty/core/models/event.dart';
+import 'package:hediaty/core/models/gift.dart';
 
 class DatabaseService {
   static Database? _database;
 
-  // Platform-specific database initialization
+  // Singleton pattern for database instance
   Future<Database> get database async {
     if (_database != null) return _database!;
-
-    // Check the platform and use sqflite or sqflite_common_ffi accordingly
-    if (kIsWeb) {
-      print("Web platform detected. SQLite is not supported.");
-      // Handle web case separately if necessary
-    } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      sqfliteFfiInit();  // Initialize sqflite FFI for desktop
-      _database = await _initDatabaseFFI();
-    } else {
-      _database = await _initDatabase(); // For mobile platforms
-    }
-
+    _database = await _initDatabase();
     return _database!;
   }
 
-  // FFI Database initialization for desktop platforms
-  Future<Database> _initDatabaseFFI() async {
-    String path = join(await getDatabasesPath(), 'users.db');
-    return await databaseFactoryFfi.openDatabase(path, options: OpenDatabaseOptions());
-  }
-
-  // Mobile Database initialization (sqflite)
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'users.db');
-    print("Database path: $path"); // Log the database path
-    return await openDatabase(path, version: 1, onCreate: (db, version) {
-      return db.execute(
-        "CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, fullName TEXT, email TEXT, phoneNumber TEXT, profilePictureUrl TEXT, passwordHash TEXT)"
-        "CREATE TABLE IF NOT EXISTS friends(id TEXT PRIMARY KEY, userId TEXT, friendId TEXT, friendName TEXT, friendAvatar TEXT, upcomingEventsCount INTEGER)"
+    try {
+      String path = join(await getDatabasesPath(), 'users.db');
+      print("Database path: $path");
+
+      return await openDatabase(
+        path,
+        version: 1,
+        onCreate: (db, version) async {
+          // Create Users Table
+          await db.execute('''
+            CREATE TABLE users (
+              id TEXT PRIMARY KEY,
+              fullName TEXT,
+              email TEXT,
+              phoneNumber TEXT,
+              profilePictureUrl TEXT,
+              passwordHash TEXT
+            )
+          ''');
+
+          // Create Friends Table
+          await db.execute('''
+            CREATE TABLE friends (
+              id TEXT PRIMARY KEY,
+              userId TEXT,
+              friendId TEXT,
+              friendName TEXT,
+              friendAvatar TEXT,
+              upcomingEventsCount INTEGER
+            )
+          ''');
+
+          // Create Gifts Table
+          await db.execute('''
+            CREATE TABLE gifts (
+              id TEXT PRIMARY KEY,
+              eventId TEXT,
+              name TEXT,
+              description TEXT,
+              category TEXT,
+              price REAL,
+              imagePath TEXT,
+              status TEXT,
+              pledgedBy TEXT
+            )
+          ''');
+
+          // Create Events Table
+          await db.execute('''
+            CREATE TABLE events (
+              id TEXT PRIMARY KEY,
+              date TEXT,
+              description TEXT,
+              userId TEXT,
+              location TEXT,
+              name TEXT
+            )
+          ''');
+        },
       );
-    });
+    } catch (e) {
+      print("Error initializing database: $e");
+      rethrow;
+    }
   }
 
-  // Insert a user into SQLite database
+  // Insert user into SQLite database
   Future<void> insertUser(user user) async {
     try {
       final db = await database;
@@ -104,7 +139,51 @@ class DatabaseService {
 
   return null;
 }
+  // Insert an event into the database
+  Future<void> insertEvent(Event event) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'events',
+        event.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print("Event inserted successfully: ${event.id}");
+    } catch (e) {
+      print("Error inserting event: $e");
+    }
+  }
 
+  // Delete an event from the database by its ID
+  Future<void> deleteEvent(String eventId) async {
+    try {
+      final db = await database;
+      final count = await db.delete(
+        'events',
+        where: 'id = ?',
+        whereArgs: [eventId],
+      );
+      if (count > 0) {
+        print("Event deleted successfully: $eventId");
+      } else {
+        print("No event found with ID: $eventId");
+      }
+    } catch (e) {
+      print("Error deleting event: $e");
+    }
+  }
+
+  // Optional: Get all events for debugging or testing
+  Future<List<Event>> getAllEvents() async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> result = await db.query('events');
+      return result.map((e) => Event.fromMap(e, e['id'])).toList();
+    } catch (e) {
+      print("Error fetching all events: $e");
+      return [];
+    }
+  }
   Future<List<Gift>> getLocalEventGifts(String eventId) async {
   final db = await database;
   final result = await db.query(
@@ -146,19 +225,16 @@ class DatabaseService {
   }
 
   // 3. Update Gift Status
-  Future<void> updateGiftStatus(String giftId, String status,
-      {String? pledgedBy}) async {
-    final db = await database;
-    await db.update(
-      'gifts',
-      {
-        'status': status,
-        'pledgedBy': pledgedBy,
-      },
-      where: 'id = ?',
-      whereArgs: [giftId],
-    );
-  }
+  Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
+  final db = await database;
+  await db.update(
+    'gifts',
+    {'status': status, 'pledgedBy': pledgedBy},
+    where: 'id = ?',
+    whereArgs: [giftId],
+  );
+}
+
 
   // 4. Delete Gift
   Future<void> deleteGift(String giftId) async {
@@ -178,5 +254,25 @@ class DatabaseService {
       return Gift.fromMap(maps[i]);
     });
   }
+    // Fetch gift details by ID
+  Future<Gift?> getGiftById(String giftId) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> result = await db.query(
+        'gifts',
+        where: 'id = ?',
+        whereArgs: [giftId],
+      );
 
+      if (result.isNotEmpty) {
+        return Gift.fromMap(result.first);
+      } else {
+        print("No gift found with ID $giftId");
+        return null;
+      }
+    } catch (e) {
+      print("Error querying gift by ID: $e");
+      return null;
+    }
+  }
 }

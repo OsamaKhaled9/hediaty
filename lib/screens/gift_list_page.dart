@@ -17,7 +17,7 @@ class GiftListPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text("Gifts")),
       body: StreamBuilder<List<Gift>>(
-        stream: giftController.getGifts(eventId),
+        stream: giftController.getGiftsStream(eventId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
