@@ -15,12 +15,15 @@ class GiftListPage extends StatelessWidget {
     final giftController = Provider.of<GiftController>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text("Gifts")),
+      appBar: AppBar(
+        title: const Text("Gifts"),
+        backgroundColor: const Color(0xFF2A6BFF),
+      ),
       body: StreamBuilder<List<Gift>>(
         stream: giftController.getGiftsStream(eventId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
@@ -28,18 +31,45 @@ class GiftListPage extends StatelessWidget {
 
           List<Gift> gifts = snapshot.data ?? [];
           if (gifts.isEmpty) {
-            return Center(child: Text("No gifts found for this event."));
+            return const Center(child: Text("No gifts found for this event."));
           }
 
           return ListView.builder(
             itemCount: gifts.length,
             itemBuilder: (context, index) {
+              final gift = gifts[index];
               return GiftListItem(
-                gift: gifts[index],
-                onPledge: () {
-                  // Update gift status to 'Pledged'
-                  giftController.updateGiftStatus(
-                      gifts[index].id, 'Pledged', FirebaseAuth.instance.currentUser!.uid);
+                gift: gift,
+                onPublish: () async {
+                  if (gift.status == 'Available') {
+                    await giftController.updateGiftStatus(
+                      gift.id,
+                      'Published',
+                      null,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Gift published successfully!")),
+                    );
+                  }
+                },
+                onEdit: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/create_edit_gift',
+                    arguments: gift,
+                  );
+                },
+                onPledge: () async {
+                  if (gift.status == 'Available') {
+                    await giftController.updateGiftStatus(
+                      gift.id,
+                      'Pledged',
+                      FirebaseAuth.instance.currentUser!.uid,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Gift pledged successfully!")),
+                    );
+                  }
                 },
               );
             },
@@ -48,9 +78,14 @@ class GiftListPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to add/edit gift page
+          Navigator.pushNamed(
+            context,
+            '/create_edit_gift',
+            arguments: null, // Pass null for creating a new gift
+          );
         },
-        child: Icon(Icons.add),
+        backgroundColor: const Color(0xFF2A6BFF),
+        child: const Icon(Icons.add),
       ),
     );
   }

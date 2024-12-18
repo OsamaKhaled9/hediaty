@@ -78,6 +78,7 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/default_avatar.JPG
+    - assets/images/default_gift.png
     - assets/profile_pics/avatar1.png
     - assets/profile_pics/avatar2.png
     - assets/profile_pics/avatar3.png

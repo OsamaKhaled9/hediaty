@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hediaty/controllers/gift_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hediaty/controllers/event_controller.dart';
 import 'package:hediaty/core/models/event.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/widgets/custom_button.dart';
-
+import 'package:hediaty/widgets/gift_list_item.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class EventDetailsPage extends StatelessWidget {
   final String? eventId;
 
@@ -175,10 +177,9 @@ class EventDetailsPage extends StatelessWidget {
     );
   }
 
-    // Build Gifts List
-  Widget _buildGiftsList(EventController eventController, String eventId) {
+Widget _buildGiftsList(EventController eventController, String eventId) {
   return FutureBuilder<List<Gift>>(
-    future: eventController.getGiftsByEventId(eventId), // Fetch gifts locally
+    future: eventController.getGiftsByEventId(eventId),
     builder: (context, giftSnapshot) {
       if (giftSnapshot.connectionState == ConnectionState.waiting) {
         return Center(child: CircularProgressIndicator());
@@ -193,7 +194,6 @@ class EventDetailsPage extends StatelessWidget {
       List<Gift> gifts = giftSnapshot.data ?? [];
 
       if (gifts.isEmpty) {
-        print("No gifts found in local database for eventId: $eventId");
         return Center(
           child: Text(
             "No gifts found for this event.",
@@ -202,43 +202,65 @@ class EventDetailsPage extends StatelessWidget {
         );
       }
 
-      print("Gifts fetched for eventId $eventId: ${gifts.map((g) => g.toJson())}");
+return ListView.builder(
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  itemCount: gifts.length,
+  itemBuilder: (context, index) {
+    final gift = gifts[index];
+    return GiftListItem(
+      gift: gift,
+      onPublish: () async {
+        final giftController = Provider.of<GiftController>(context, listen: false);
+        try {
+          // Determine the new status based on the current status
+          if (gift.status == 'Available') {
+            await giftController.updateGiftStatus(
+              gift.id,
+              'Published',
+              null,
+            );
 
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemCount: gifts.length,
-        separatorBuilder: (context, index) => Divider(
-          color: Color(0xFFADD8E6),
-          height: 1,
-        ),
-        itemBuilder: (context, index) {
-          final gift = gifts[index];
-          return ListTile(
-            contentPadding: EdgeInsets.symmetric(horizontal: 0),
-            title: Text(
-              gift.name,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Category: ${gift.category}"),
-            trailing: Text(
-              "\$${gift.price.toStringAsFixed(2)}",
-              style: TextStyle(
-                color: Color(0xFF2A6BFF),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            onTap: () {
-              // Navigate to edit the selected gift
-              Navigator.pushNamed(
-                context,
-                '/create_edit_gift',
-                arguments: gift,
-              );
-            },
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Gift published successfully!")),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error publishing gift: $e")),
           );
-        },
-      );
+        }
+      },
+      onEdit: () {
+        Navigator.pushNamed(context, '/create_edit_gift', arguments: gift);
+      },
+      onPledge: () async {
+        final giftController = Provider.of<GiftController>(context, listen: false);
+        try {
+          if (gift.status == 'Published') {
+            await giftController.updateGiftStatus(
+              gift.id,
+              'Pledged',
+              FirebaseAuth.instance.currentUser!.uid,
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Gift pledged successfully!")),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Only published gifts can be pledged.")),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error pledging gift: $e")),
+          );
+        }
+      },
+    );
+  },
+);
     },
   );
 }
