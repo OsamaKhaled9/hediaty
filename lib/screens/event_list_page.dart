@@ -162,12 +162,16 @@ class _EventListPageState extends State<EventListPage> {
                             color: Color(0xFF2A6BFF),
                           ),
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/event_details',
-                              arguments: event.id, // Pass eventId as a String
-                            );
-                          },
+                              final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+                              Navigator.pushNamed(
+                                context,
+                                '/event_details',
+                                arguments: {
+                                  'currentUserId': currentUserId, // Pass current user ID
+                                  'eventId': event.id,           // Pass event ID
+                                },
+                              );
+                            },
                         ),
                       );
                     },

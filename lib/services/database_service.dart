@@ -294,4 +294,13 @@ Future<List<Gift>> getGiftsByEventId(String eventId) async {
       return null;
     }
   }
+  Stream<List<Gift>> getGiftsByEventIdStream(String eventId) async* {
+  final db = await database;
+  // Query the database and convert the result to a stream
+  final List<Map<String, dynamic>> queryResult =
+      await db.query('gifts', where: 'eventId = ?', whereArgs: [eventId]);
+  yield queryResult.map((item) => Gift.fromMap(item)).toList();
+}
+
+
 }

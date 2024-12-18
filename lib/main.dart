@@ -1,4 +1,3 @@
-///*
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // Firebase Config
 import 'firebase_options.dart';
-import "core/models/user.dart";
+
 // Controllers
 import 'package:hediaty/controllers/home_controller.dart';
 import 'package:hediaty/controllers/user_controller.dart';
@@ -16,6 +15,8 @@ import 'package:hediaty/controllers/gift_controller.dart';
 
 // Models
 import 'package:hediaty/core/models/gift.dart';
+import 'package:hediaty/core/models/user.dart';
+
 
 // Pages
 import 'package:hediaty/screens/loading_page.dart';
@@ -80,28 +81,36 @@ class MyApp extends StatelessWidget {
             return ProfilePage(userId: userId ?? '');
           },
           '/edit_profile_details': (context) {
-                final Map<String, dynamic> arguments =
-                    ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+            final Map<String, dynamic> arguments =
+                ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
 
-                final user currentUser = arguments['currentUser'] as user;
+            final user currentUser = arguments['currentUser'] as user;
 
-                return EditProfileDetails(currentUser: currentUser);
-              },
+            return EditProfileDetails(currentUser: currentUser);
+          },
           '/event_list': (context) => EventListPage(),
           '/event_details': (context) {
-            final String eventId = ModalRoute.of(context)!.settings.arguments as String;
-            return EventDetailsPage(eventId: eventId);
+            final Map<String, dynamic> arguments =
+                ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+
+            final String currentUserId = arguments['currentUserId'] as String;
+            final String eventId = arguments['eventId'] as String;
+
+            return EventDetailsPage(
+              currentUserId: currentUserId,
+              eventId: eventId,
+            );
           },
           '/gift_list': (context) {
             final String eventId = ModalRoute.of(context)!.settings.arguments as String;
             return GiftListPage(eventId: eventId);
           },
           '/create_edit_gift': (context) {
-              final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-              final Gift? gift = args['gift'] as Gift?;
-              final String eventId = args['eventId'] as String;
-              return CreateEditGiftPage(gift: gift, eventId: eventId);
-            },
+            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            final Gift? gift = args['gift'] as Gift?;
+            final String eventId = args['eventId'] as String;
+            return CreateEditGiftPage(gift: gift, eventId: eventId);
+          },
           '/gift_details': (context) {
             final String giftId = ModalRoute.of(context)!.settings.arguments as String;
             return GiftDetailsPage(giftId: giftId);
@@ -116,90 +125,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-//*/
-/*
-import 'package:flutter/material.dart';
-import 'package:hediaty/services/database_service.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final databaseService = DatabaseService();
-  runApp(MyApp(databaseService: databaseService));
-}
-
-class MyApp extends StatelessWidget {
-  final DatabaseService databaseService;
-
-  const MyApp({Key? key, required this.databaseService}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Database Viewer',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: DatabaseViewerPage(databaseService: databaseService),
-    );
-  }
-}
-
-class DatabaseViewerPage extends StatelessWidget {
-  final DatabaseService databaseService;
-
-  const DatabaseViewerPage({Key? key, required this.databaseService})
-      : super(key: key);
-
-  Future<Map<String, List<Map<String, dynamic>>>> _getDatabaseContents() async {
-    final db = await databaseService.database;
-
-    return {
-      "Users": await db.query('users'),
-      "Friends": await db.query('friends'),
-      "Events": await db.query('events'),
-      "Gifts": await db.query('gifts'),
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Database Viewer')),
-      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
-        future: _getDatabaseContents(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-
-          final databaseContents = snapshot.data ?? {};
-
-          return ListView(
-            children: databaseContents.entries.map((entry) {
-              return ExpansionTile(
-                title: Text('${entry.key} Table'),
-                children: entry.value.isEmpty
-                    ? [
-                        const ListTile(
-                          title: Text('No records found'),
-                        ),
-                      ]
-                    : entry.value.map((row) {
-                        return ListTile(
-                          title: Text(row.toString()),
-                        );
-                      }).toList(),
-              );
-            }).toList(),
-          );
-        },
-      ),
-    );
-  }
-}
-
-*/

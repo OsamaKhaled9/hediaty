@@ -4,16 +4,18 @@ import 'package:hediaty/core/models/gift.dart';
 
 class GiftListItem extends StatefulWidget {
   final Gift gift;
-  final VoidCallback onPublish;
-  final VoidCallback onEdit;
-  final VoidCallback onPledge;
+  final VoidCallback? onPublish; // Nullable callbacks
+  final VoidCallback? onEdit; // Nullable callbacks
+  final VoidCallback? onPledge; // Nullable callbacks
+  final VoidCallback? onPurchase; // Added for Purchase action
 
   const GiftListItem({
     Key? key,
     required this.gift,
-    required this.onPublish,
-    required this.onEdit,
-    required this.onPledge,
+    this.onPublish,
+    this.onEdit,
+    this.onPledge,
+    this.onPurchase, // Nullable callback
   }) : super(key: key);
 
   @override
@@ -23,7 +25,7 @@ class GiftListItem extends StatefulWidget {
 class _GiftListItemState extends State<GiftListItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  bool _isPublished = false; // Track if the gift is published
+  bool _isPublished = false;
 
   @override
   void initState() {
@@ -44,7 +46,7 @@ class _GiftListItemState extends State<GiftListItem>
   Future<void> _checkIfPublished() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('gifts') // Adjust collection name as needed
+          .collection('gifts')
           .where('name', isEqualTo: widget.gift.name)
           .get();
 
@@ -62,11 +64,11 @@ class _GiftListItemState extends State<GiftListItem>
     if (_isPublished) {
       return widget.gift.status == "Pledged" ? Colors.green : Colors.blue;
     } else {
-      return Colors.amber; // Not published
+      return Colors.amber;
     }
   }
 
-  Widget _buildPublishButton() {
+  Widget _buildActionButton() {
     if (!_isPublished) {
       return ElevatedButton(
         onPressed: widget.onPublish,
@@ -75,13 +77,21 @@ class _GiftListItemState extends State<GiftListItem>
         ),
         child: const Text("Publish"),
       );
-    } else if (widget.gift.status == "Available") {
+    } else if (widget.gift.status == "Published") {
       return ElevatedButton(
         onPressed: widget.onPledge,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
         ),
         child: const Text("Pledge"),
+      );
+    } else if (widget.gift.status == "Pledged") {
+      return ElevatedButton(
+        onPressed: widget.onPurchase,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+        ),
+        child: const Text("Mark as Purchased"),
       );
     }
     return Text(
@@ -96,7 +106,7 @@ class _GiftListItemState extends State<GiftListItem>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0), // Add spacing between items
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: GestureDetector(
         onTap: widget.onEdit,
         child: AnimatedContainer(
@@ -116,18 +126,15 @@ class _GiftListItemState extends State<GiftListItem>
             borderRadius: BorderRadius.circular(12),
             child: Stack(
               children: [
-                // Background Image with Opacity
                 Opacity(
                   opacity: 0.3,
                   child: Image.asset(
                     widget.gift.imagePath,
-                    height: 160, // Reduced height
+                    height: 160,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
-
-                // Overlay Details
                 Positioned.fill(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -135,7 +142,6 @@ class _GiftListItemState extends State<GiftListItem>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Gift Details
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -187,18 +193,14 @@ class _GiftListItemState extends State<GiftListItem>
                             ),
                           ],
                         ),
-
-                        // Publish or Pledge Button
                         Align(
                           alignment: Alignment.bottomRight,
-                          child: _buildPublishButton(),
+                          child: _buildActionButton(),
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                // Edit Icon
                 Positioned(
                   top: 8,
                   right: 8,
@@ -222,3 +224,5 @@ class _GiftListItemState extends State<GiftListItem>
     );
   }
 }
+
+

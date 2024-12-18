@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hediaty/core/models/friend.dart';
 import 'package:hediaty/screens/event_details_page.dart';
 import 'package:hediaty/controllers/home_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
 class FriendListItem extends StatelessWidget {
@@ -10,7 +11,7 @@ class FriendListItem extends StatelessWidget {
   const FriendListItem({Key? key, required this.friend}) : super(key: key);
 
   // Show the modal with the list of events for a friend
-  void _showEventModal(BuildContext context, Friend friend, HomeController controller) {
+  void _showEventModal(BuildContext context, Friend friend, HomeController controller, String currentUserId) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -28,7 +29,6 @@ class FriendListItem extends StatelessWidget {
             }
 
             List<Map<String, dynamic>> events = snapshot.data ?? [];
-            print("Events found areeee :$events");
             if (events.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -72,7 +72,10 @@ class FriendListItem extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EventDetailsPage(eventId: event['eventId']),
+                                builder: (context) => EventDetailsPage(
+                                  eventId: event['eventId'], // Pass the event ID
+                                  currentUserId: currentUserId, // Pass the current user ID
+                                ),
                               ),
                             );
                           },
@@ -89,9 +92,10 @@ class FriendListItem extends StatelessWidget {
     );
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     final homeController = Provider.of<HomeController>(context, listen: false);
+    final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? ''; // Get the current user ID
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -101,7 +105,7 @@ class FriendListItem extends StatelessWidget {
           end: Alignment.centerRight,
           colors: [
             Color(0xFFE6F2FF), // Light blue
-            Colors.white,       // Transitioning to white
+            Colors.white, // Transitioning to white
           ],
         ),
         borderRadius: BorderRadius.circular(12),
@@ -122,7 +126,7 @@ class FriendListItem extends StatelessWidget {
         title: Text(
           friend.friendName,
           style: TextStyle(
-            fontWeight: FontWeight.bold, 
+            fontWeight: FontWeight.bold,
             fontSize: 16,
             color: Color(0xFF2A6BFF),
           ),
@@ -139,7 +143,7 @@ class FriendListItem extends StatelessWidget {
           size: 20,
         ),
         onTap: () {
-          _showEventModal(context, friend, homeController);
+          _showEventModal(context, friend, homeController, currentUserId);
         },
       ),
     );

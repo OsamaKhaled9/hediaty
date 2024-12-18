@@ -417,5 +417,27 @@ Future<Gift?> getGiftById(String giftId) async {
     return null;
   }
 }
+Future<List<Gift>> getGiftsByEventId(String eventId,
+    {bool filterPublishedAndPurchased = false}) async {
+  try {
+    Query<Map<String, dynamic>> query =
+        _firestore.collection('gifts').where('eventId', isEqualTo: eventId);
+
+    if (filterPublishedAndPurchased) {
+      query = query.where('status', whereIn: ['Published', 'Purchased']);
+    }
+
+    QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
+
+    return snapshot.docs
+        .map((doc) => Gift.fromFirestore(doc)) // Pass the DocumentSnapshot to Gift.fromFirestore
+        .toList();
+  } catch (e) {
+    print("Error fetching gifts from Firestore: $e");
+    return [];
+  }
+}
+
+
 
 }

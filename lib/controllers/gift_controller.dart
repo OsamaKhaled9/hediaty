@@ -145,4 +145,42 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
       return [];
     }
   }
+   Stream<List<Gift>> getOwnerGiftsStream(String eventId) async* {
+    try {
+      // Fetch gifts from the local database
+      Stream<List<Gift>> localGiftsStream =
+          _databaseService.getGiftsByEventIdStream(eventId);
+
+      // Fetch published gifts from Firestore to synchronize
+      List<Gift> firestoreGifts =
+          await _firebaseService.getGiftsByEventId(eventId);
+
+      // Synchronize local and Firestore data
+      for (Gift gift in firestoreGifts) {
+        await _databaseService.insertGift(gift);
+      }
+
+      // Yield the combined local stream
+      yield* localGiftsStream;
+    } catch (e) {
+      print("Error in getOwnerGiftsStream: $e");
+      yield [];
+    }
+  }
+
+  // Stream for Public Gifts (published + purchased only)
+  Stream<List<Gift>> getPublicGiftsStream(String eventId) async* {
+    try {
+      // Fetch only published and purchased gifts from Firestore
+      List<Gift> firestoreGifts = await _firebaseService.getGiftsByEventId(
+        eventId,
+        filterPublishedAndPurchased: true,
+      );
+
+      yield firestoreGifts;
+    } catch (e) {
+      print("Error in getPublicGiftsStream: $e");
+      yield [];
+    }
+  }
 }
