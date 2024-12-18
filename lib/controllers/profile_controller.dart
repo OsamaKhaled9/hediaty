@@ -1,40 +1,48 @@
 import 'package:hediaty/core/models/user.dart';
 import 'package:hediaty/services/firebase_service.dart';
+import 'package:hediaty/services/database_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileController {
   final FirebaseService _firebaseService = FirebaseService();
+  final DatabaseService _databaseService = DatabaseService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Load user profile and sync Firestore with local database
   Future<user?> loadUserProfile(String userId) async {
-    return await _firebaseService.getUserById(userId); // Use the new method
+    try {
+      // Fetch user data from Firestore
+      user? firestoreUser = await _firebaseService.getUserById(userId);
+
+      if (firestoreUser != null) {
+        // Sync Firestore user data to SQLite
+        await _databaseService.insertUser(firestoreUser);
+      }
+
+      return firestoreUser;
+    } catch (e) {
+      print("Error loading user profile: $e");
+      return null;
+    }
   }
 
-  /// Update notification settings
-  Future<void> updateNotificationSetting(user updatedUser) async {
-    await _firestore.collection('users').doc(updatedUser.id).update({
-      'isNotificationsEnabled': updatedUser.isNotificationsEnabled,
-    });
-  }
-    /// Updates the user profile in Firestore
+  // Update user profile in Firestore and SQLite
   Future<void> updateUserProfile(user updatedUser) async {
     try {
-      // Update user data in Firestore
-      await _firestore.collection('users').doc(updatedUser.id).update({
-        'fullName': updatedUser.fullName,
-        'email': updatedUser.email,
-        'phoneNumber': updatedUser.phoneNumber,
-        'profilePictureUrl': updatedUser.profilePictureUrl,
-        'isNotificationsEnabled': updatedUser.isNotificationsEnabled,
-      });
+      // Update Firestore
+      await _firestore.collection('users').doc(updatedUser.id).update(updatedUser.toJson());
 
-      print("User profile updated successfully in Firestore.");
+      // Update SQLite
+      await _databaseService.insertUser(updatedUser);
+
+      print("User profile updated successfully.");
     } catch (e) {
-      print("Error updating user profile in Firestore: $e");
+      print("Error updating user profile: $e");
       throw Exception("Failed to update user profile.");
     }
   }
-   /// Stream to listen to real-time updates of the user profile
+
+  // Stream user profile updates from Firestore
   Stream<user?> getUserProfileStream(String userId) {
     return _firestore.collection('users').doc(userId).snapshots().map((snapshot) {
       if (snapshot.exists) {
@@ -43,6 +51,19 @@ class ProfileController {
       return null;
     });
   }
-  
-}
 
+  // Update notification settings
+  Future<void> updateNotificationSetting(user updatedUser) async {
+    try {
+      await _firestore.collection('users').doc(updatedUser.id).update({
+        'isNotificationsEnabled': updatedUser.isNotificationsEnabled,
+      });
+
+      // Update SQLite
+      await _databaseService.insertUser(updatedUser);
+    } catch (e) {
+      print("Error updating notification settings: $e");
+      throw Exception("Failed to update notification settings.");
+    }
+  }
+}

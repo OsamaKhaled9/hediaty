@@ -11,38 +11,51 @@ class UserController extends ChangeNotifier {
   final SessionService _sessionService = SessionService();
 
   // Sign up user, authenticate, upload profile pic, and save data
-Future<String?> signUpUser(user user, String password,String phoneNumber, String avatarPath) async {
-  
-  try {
+  Future<String?> signUpUser(user user, String password, String phoneNumber, String avatarPath) async {
+    try {
       // Check if phone number is unique
       bool isUnique = await _firebaseService.isPhoneNumberUnique(phoneNumber);
       if (!isUnique) {
         return 'Phone number already in use';
       }
-    // Firebase Auth Sign Up
-    UserCredential userCredential = await _firebaseService.signUpUser(user.email, password);
-    user.id = userCredential.user?.uid ?? "";
 
-    // Save avatar path (either default or selected from assets)
-    user.profilePictureUrl = avatarPath.isNotEmpty ? avatarPath : 'assets/images/default_avatar.JPG';  // Default if no selection
+      // Firebase Auth Sign Up
+      UserCredential userCredential = await _firebaseService.signUpUser(user.email, password);
+      user.id = userCredential.user?.uid ?? "";
 
-    // Store user data in SQLite (optional, can be removed if not using SQLite)
-    print("Saving user data to local: ${user.toJson()}");  // Debug log
+      // Save avatar path
+      user.profilePictureUrl = avatarPath.isNotEmpty ? avatarPath : 'assets/images/default_avatar.JPG';
 
-    await _databaseService.insertUser(user);
+      // Save user to local SQLite
+      await _databaseService.insertUser(user);
 
-    // Save user data to Firestore
+      // Save user to Firestore
+      await _firebaseService.saveUserToFirestore(user, avatarPath);
 
-    print("Saving user data to Firestore: ${user.toString()}");  // Debug log
+      // Save session state
+      await _sessionService.saveSession(true);
 
-    await _firebaseService.saveUserToFirestore(user, avatarPath);
-
-    // Save session
-    await _sessionService.saveSession(true);
-
-    return null;  // Success
-  } catch (e) {
-    return e.toString();
+      return null; // Sign-up success
+    } catch (e) {
+      return e.toString(); // Return error message
+    }
   }
-}
+
+  // Load user profile from Firestore and sync to SQLite
+  Future<user?> loadUserProfile(String userId) async {
+    try {
+      // Fetch user data from Firestore
+      user? firestoreUser = await _firebaseService.getUserById(userId);
+
+      if (firestoreUser != null) {
+        // Sync Firestore user data to SQLite
+        await _databaseService.insertUser(firestoreUser);
+      }
+
+      return firestoreUser;
+    } catch (e) {
+      print("Error loading user profile: $e");
+      return null;
+    }
+  }
 }
