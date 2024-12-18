@@ -8,6 +8,7 @@ import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/widgets/custom_button.dart';
 import 'package:hediaty/widgets/gift_list_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 class EventDetailsPage extends StatelessWidget {
   final String? eventId;
 
@@ -15,7 +16,6 @@ class EventDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-        // Use the passed eventId or extract from route arguments
     final String currentEventId =
         eventId ?? ModalRoute.of(context)!.settings.arguments as String;
 
@@ -39,11 +39,17 @@ class EventDetailsPage extends StatelessWidget {
         stream: eventController.getEventStream(currentEventId),
         builder: (context, eventSnapshot) {
           if (eventSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: Color(0xFF2A6BFF)));
+            return Center(
+                child: CircularProgressIndicator(color: Color(0xFF2A6BFF)));
           }
 
           if (eventSnapshot.hasError) {
-            return Center(child: Text("Error: ${eventSnapshot.error}", style: TextStyle(color: Colors.red)));
+            return Center(
+              child: Text(
+                "Error: ${eventSnapshot.error}",
+                style: TextStyle(color: Colors.red),
+              ),
+            );
           }
 
           Event? event = eventSnapshot.data;
@@ -63,12 +69,8 @@ class EventDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Event Details Section
                   _buildEventDetailsCard(event),
-
-                  SizedBox(height: 16),
-
-                  // Gifts Section
+                  const SizedBox(height: 16),
                   Text(
                     "Gifts",
                     style: TextStyle(
@@ -77,12 +79,9 @@ class EventDetailsPage extends StatelessWidget {
                       color: Color(0xFF2A6BFF),
                     ),
                   ),
-                  SizedBox(height: 8),
-                  _buildGiftsList(eventController, currentEventId),
-
-                  SizedBox(height: 16),
-
-                  // Add Gift Button
+                  const SizedBox(height: 8),
+                  _buildGiftsList(currentEventId),
+                  const SizedBox(height: 16),
                   Center(
                     child: CustomButton(
                       label: "Add Gift",
@@ -90,10 +89,9 @@ class EventDetailsPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/create_edit_gift',
-                          arguments: {'eventId': currentEventId // Pass the eventId to the page                        );
-                      },
+                          arguments: {'eventId': currentEventId},
                         );
-                      }
+                      },
                     ),
                   ),
                 ],
@@ -111,7 +109,7 @@ class EventDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 6,
@@ -119,24 +117,24 @@ class EventDetailsPage extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             event.name,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2A6BFF),
             ),
           ),
-          SizedBox(height: 8),
-          _buildDetailRow(Icons.calendar_today, "Date",
-              DateFormat('yyyy-MM-dd').format(event.date)),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
+          _buildDetailRow(
+              Icons.calendar_today, "Date", DateFormat('yyyy-MM-dd').format(event.date)),
+          const SizedBox(height: 8),
           _buildDetailRow(Icons.location_on, "Location", event.location),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           _buildDetailRow(Icons.description, "Description", event.description),
         ],
       ),
@@ -148,25 +146,25 @@ class EventDetailsPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
-          icon, 
-          color: Color(0xFF2A6BFF),
+          icon,
+          color: const Color(0xFF2A6BFF),
           size: 20,
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF333333),
                 ),
               ),
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Color(0xFF666666),
                 ),
               ),
@@ -177,92 +175,71 @@ class EventDetailsPage extends StatelessWidget {
     );
   }
 
-Widget _buildGiftsList(EventController eventController, String eventId) {
-  return FutureBuilder<List<Gift>>(
-    future: eventController.getGiftsByEventId(eventId),
-    builder: (context, giftSnapshot) {
-      if (giftSnapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: CircularProgressIndicator());
-      }
+  Widget _buildGiftsList(String eventId) {
+    return Consumer<GiftController>(
+      builder: (context, giftController, _) {
+        return FutureBuilder<List<Gift>>(
+          future: giftController.getGiftsByEventId(eventId),
+          builder: (context, giftSnapshot) {
+            if (giftSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-      if (giftSnapshot.hasError) {
-        return Center(
-          child: Text("Error loading gifts: ${giftSnapshot.error}"),
+            if (giftSnapshot.hasError) {
+              return Center(
+                child: Text("Error loading gifts: ${giftSnapshot.error}"),
+              );
+            }
+
+            List<Gift> gifts = giftSnapshot.data ?? [];
+
+            if (gifts.isEmpty) {
+              return const Center(
+                child: Text(
+                  "No gifts found for this event.",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: gifts.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final gift = gifts[index];
+                return GiftListItem(
+                  gift: gift,
+                  onPublish: () async {
+                    await giftController.updateGiftStatus(
+                      gift.id,
+                      'Published',
+                      null,
+                    );
+                  },
+                  onEdit: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/create_edit_gift',
+                      arguments: gift,
+                    );
+                  },
+                  onPledge: () async {
+                    if (gift.status == 'Published') {
+                      await giftController.updateGiftStatus(
+                        gift.id,
+                        'Pledged',
+                        FirebaseAuth.instance.currentUser!.uid,
+                      );
+                    }
+                  },
+                );
+              },
+            );
+          },
         );
-      }
-
-      List<Gift> gifts = giftSnapshot.data ?? [];
-
-      if (gifts.isEmpty) {
-        return Center(
-          child: Text(
-            "No gifts found for this event.",
-            style: TextStyle(color: Colors.grey),
-          ),
-        );
-      }
-
-return ListView.builder(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  itemCount: gifts.length,
-  itemBuilder: (context, index) {
-    final gift = gifts[index];
-    return GiftListItem(
-      gift: gift,
-      onPublish: () async {
-        final giftController = Provider.of<GiftController>(context, listen: false);
-        try {
-          // Determine the new status based on the current status
-          if (gift.status == 'Available') {
-            await giftController.updateGiftStatus(
-              gift.id,
-              'Published',
-              null,
-            );
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Gift published successfully!")),
-            );
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error publishing gift: $e")),
-          );
-        }
-      },
-      onEdit: () {
-        Navigator.pushNamed(context, '/create_edit_gift', arguments: gift);
-      },
-      onPledge: () async {
-        final giftController = Provider.of<GiftController>(context, listen: false);
-        try {
-          if (gift.status == 'Published') {
-            await giftController.updateGiftStatus(
-              gift.id,
-              'Pledged',
-              FirebaseAuth.instance.currentUser!.uid,
-            );
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Gift pledged successfully!")),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Only published gifts can be pledged.")),
-            );
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error pledging gift: $e")),
-          );
-        }
       },
     );
-  },
-);
-    },
-  );
-}
-
+  }
 }

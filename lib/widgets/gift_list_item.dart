@@ -95,124 +95,127 @@ class _GiftListItemState extends State<GiftListItem>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onEdit,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          border: Border.all(color: _getBorderColor(), width: 3),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              // Background Image with Opacity
-              Opacity(
-                opacity: 0.3,
-                child: Image.asset(
-                  widget.gift.imagePath,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0), // Add spacing between items
+      child: GestureDetector(
+        onTap: widget.onEdit,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            border: Border.all(color: _getBorderColor(), width: 3),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                // Background Image with Opacity
+                Opacity(
+                  opacity: 0.3,
+                  child: Image.asset(
+                    widget.gift.imagePath,
+                    height: 160, // Reduced height
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
 
-              // Overlay Details
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Gift Details
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.gift.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 4.0,
-                                  color: Colors.white,
-                                  offset: Offset(1.0, 1.0),
-                                ),
-                              ],
+                // Overlay Details
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Gift Details
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.gift.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 4.0,
+                                    color: Colors.white,
+                                    offset: Offset(1.0, 1.0),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Category: ${widget.gift.category}",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 4.0,
-                                  color: Colors.white,
-                                  offset: Offset(1.0, 1.0),
-                                ),
-                              ],
+                            const SizedBox(height: 4),
+                            Text(
+                              "Category: ${widget.gift.category}",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 4.0,
+                                    color: Colors.white,
+                                    offset: Offset(1.0, 1.0),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "\$${widget.gift.price.toStringAsFixed(2)}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 4.0,
-                                  color: Colors.white,
-                                  offset: Offset(1.0, 1.0),
-                                ),
-                              ],
+                            const SizedBox(height: 4),
+                            Text(
+                              "\$${widget.gift.price.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 4.0,
+                                    color: Colors.white,
+                                    offset: Offset(1.0, 1.0),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
 
-                      // Publish or Pledge Button
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: _buildPublishButton(),
+                        // Publish or Pledge Button
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: _buildPublishButton(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Edit Icon
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Icon(
+                    Icons.edit,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 4.0,
+                        color: Colors.white,
+                        offset: Offset(1.0, 1.0),
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              // Edit Icon
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Icon(
-                  Icons.edit,
-                  color: Colors.black,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 4.0,
-                      color: Colors.white,
-                      offset: Offset(1.0, 1.0),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -76,8 +76,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     right: 0,
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, '/edit_profile_details',
-                            arguments: currentUser);
+                          Navigator.pushNamed(
+                            context,
+                            '/edit_profile_details',
+                            arguments: {
+                              'currentUser': currentUser,
+                            },
+                          );
                       },
                       child: Container(
                         decoration: BoxDecoration(

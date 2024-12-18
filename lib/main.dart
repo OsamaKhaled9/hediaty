@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // Firebase Config
 import 'firebase_options.dart';
-
+import "core/models/user.dart";
 // Controllers
 import 'package:hediaty/controllers/home_controller.dart';
 import 'package:hediaty/controllers/user_controller.dart';
@@ -80,9 +80,13 @@ class MyApp extends StatelessWidget {
             return ProfilePage(userId: userId ?? '');
           },
           '/edit_profile_details': (context) {
-            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-            return EditProfileDetails(currentUser: args?['user']);
-          },
+                final Map<String, dynamic> arguments =
+                    ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+
+                final user currentUser = arguments['currentUser'] as user;
+
+                return EditProfileDetails(currentUser: currentUser);
+              },
           '/event_list': (context) => EventListPage(),
           '/event_details': (context) {
             final String eventId = ModalRoute.of(context)!.settings.arguments as String;

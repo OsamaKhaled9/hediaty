@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/services/firebase_service.dart';
 import 'package:hediaty/services/database_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GiftController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
@@ -112,6 +113,36 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
     } catch (e) {
       print("Error fetching gift details: $e");
       return null;
+    }
+  }
+     // Fetch gifts for a specific event by eventId from local database
+  Future<List<Gift>> getGiftsByEventId(String eventId) async {
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (currentUserId == null) {
+        print("Error: No logged-in user found.");
+        return [];
+      }
+
+      // Fetch all gifts for the event
+      List<Gift> allGifts = await _databaseService.getGiftsByEventId(eventId);
+
+      // Filter gifts: Only allow gifts created by the current user or published gifts
+      List<Gift> accessibleGifts = allGifts.where((gift) {
+        return gift.pledgedBy == currentUserId || gift.status == "Published";
+      }).toList();
+
+      if (accessibleGifts.isNotEmpty) {
+        print("Accessible gifts for user $currentUserId and event $eventId: $accessibleGifts");
+      } else {
+        print("No accessible gifts found for user $currentUserId and event $eventId.");
+      }
+
+      return accessibleGifts;
+    } catch (e) {
+      print("Error fetching gifts for eventId $eventId: $e");
+      return [];
     }
   }
 }
