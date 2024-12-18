@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hediaty/core/models/gift.dart';
 
@@ -22,6 +23,7 @@ class GiftListItem extends StatefulWidget {
 class _GiftListItemState extends State<GiftListItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  bool _isPublished = false; // Track if the gift is published
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _GiftListItemState extends State<GiftListItem>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _checkIfPublished();
   }
 
   @override
@@ -38,18 +41,33 @@ class _GiftListItemState extends State<GiftListItem>
     super.dispose();
   }
 
+  Future<void> _checkIfPublished() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('gifts') // Adjust collection name as needed
+          .where('name', isEqualTo: widget.gift.name)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          _isPublished = true;
+        });
+      }
+    } catch (e) {
+      print("Error checking gift publication status: $e");
+    }
+  }
+
   Color _getBorderColor() {
-    if (widget.gift.status == "Available" && widget.gift.eventId.isNotEmpty) {
-      return Colors.blue; // Published and available
-    } else if (widget.gift.status == "Pledged") {
-      return Colors.green; // Pledged
+    if (_isPublished) {
+      return widget.gift.status == "Pledged" ? Colors.green : Colors.blue;
     } else {
       return Colors.amber; // Not published
     }
   }
 
   Widget _buildPublishButton() {
-    if (widget.gift.eventId.isEmpty) {
+    if (!_isPublished) {
       return ElevatedButton(
         onPressed: widget.onPublish,
         style: ElevatedButton.styleFrom(
@@ -101,7 +119,7 @@ class _GiftListItemState extends State<GiftListItem>
                 opacity: 0.3,
                 child: Image.asset(
                   widget.gift.imagePath,
-                  height: 180, // Adjusted height to prevent overflow
+                  height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),

@@ -46,15 +46,43 @@ class GiftController extends ChangeNotifier {
   }
 
   // Update Gift Status (e.g., Pledge Gift)
-  Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
-    try {
+Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
+  try {
+    // Check if the document exists in Firestore
+    final giftDoc = await _firebaseService.getGiftById(giftId);
+
+    if (giftDoc != null) {
+      // Update the gift in Firestore
       await _firebaseService.updateGiftStatus(giftId, status, pledgedBy);
-      await _databaseService.updateGiftStatus(giftId, status, pledgedBy); // Update locally
-      notifyListeners();
-    } catch (e) {
-      print("Error updating gift status: $e");
+
+      // Update the gift in the local database
+      await _databaseService.updateGiftStatus(giftId, status, pledgedBy);
+    } else {
+      print("Gift document not found in Firestore. Creating it before updating...");
+
+      // Fetch the gift from the local database
+      final localGift = await _databaseService.getGiftById(giftId);
+
+      if (localGift != null) {
+        // Add the gift to Firestore
+        await _firebaseService.createGift(localGift);
+
+        // Update the gift in Firestore
+        await _firebaseService.updateGiftStatus(giftId, status, pledgedBy);
+
+        // Update the gift in the local database
+        await _databaseService.updateGiftStatus(giftId, status, pledgedBy);
+      } else {
+        throw Exception("Gift not found locally. Unable to update.");
+      }
     }
+
+    notifyListeners();
+  } catch (e) {
+    print("Error updating gift status: $e");
   }
+}
+
 
   // Pledge a gift if it is available
   Future<void> pledgeGift(String giftId, String userId) async {
