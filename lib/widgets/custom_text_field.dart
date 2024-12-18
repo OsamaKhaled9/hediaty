@@ -6,6 +6,8 @@ class CustomTextField extends StatelessWidget {
   final IconData icon;
   final bool obscureText;
   final TextInputType? keyboardType; // Add this optional parameter
+  final String? Function(String?)? validator; // Add this line
+
 
 
   const CustomTextField({
@@ -15,15 +17,18 @@ class CustomTextField extends StatelessWidget {
     required this.icon,
     this.obscureText = false,
     this.keyboardType, // Add this to the constructor
+    this.validator, // Add this line
+
 
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType, // Add this line
+      validator: validator, // Add this line
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(icon, color: const Color(0xFF2A6BFF)),
