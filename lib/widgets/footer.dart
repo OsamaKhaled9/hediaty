@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hediaty/screens/event_list_page.dart';
 import 'package:hediaty/screens/gift_list_page.dart';
-import 'package:hediaty/utils/constants.dart';
+//import 'package:hediaty/utils/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Footer extends StatefulWidget {
@@ -93,24 +93,31 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
           ),
           label: 'Events',
         ),
-        BottomNavigationBarItem(
-          icon: GestureDetector(
-            onTap: () {
-              _playButtonAnimation();
-              Navigator.pushNamed(context, '/gift_list');
-            },
-            child: AnimatedBuilder(
-              animation: _buttonScaleAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _buttonScaleAnimation.value,
-                  child: Icon(FontAwesomeIcons.gift),
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              onTap: () {
+                _playButtonAnimation();
+                // Replace 'eventIdValue' with the actual event ID you want to pass
+                final String eventId = 'eventIdValue'; // Fetch or pass the correct eventId dynamically
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GiftListPage(eventId: eventId),
+                  ),
                 );
               },
+              child: AnimatedBuilder(
+                animation: _buttonScaleAnimation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _buttonScaleAnimation.value,
+                    child: Icon(FontAwesomeIcons.gift),
+                  );
+                },
+              ),
             ),
+            label: 'Gifts',
           ),
-          label: 'Gifts',
-        ),
         BottomNavigationBarItem(
           icon: GestureDetector(
             onTap: () {

@@ -93,8 +93,17 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.gift == null ? "Create Gift" : "Edit Gift"),
-        centerTitle: true,
+        title: Text(
+          widget.gift == null ? "Create Gift" : "Edit Gift",
+          style: TextStyle(
+            color: const Color(0xFF2A6BFF),
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2A6BFF)),
       ),
       body: SafeArea(
         child: Padding(
@@ -102,8 +111,7 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
           child: Form(
             key: _formKey,
             child: ListView(
-              // Changed from SingleChildScrollView to ListView
-              shrinkWrap: true, // Add this to prevent unnecessary scrolling
+              shrinkWrap: true,
               children: [
                 CustomTextField(
                   controller: _nameController,
@@ -127,7 +135,7 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
                   controller: _priceController,
                   labelText: "Price",
                   icon: Icons.attach_money,
-                  keyboardType: TextInputType.number, // Updated to use correct parameter name
+                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
                 // Image Selection Section
