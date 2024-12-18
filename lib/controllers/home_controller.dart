@@ -7,61 +7,54 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
-var uuid = Uuid();
-String newId = uuid.v4();  // Generate a version 4 UUID
-
 class HomeController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
   final DatabaseService _databaseService = DatabaseService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  
+  // Get current user
+  Future<user?> getCurrentUser() async {
+    try {
+      User? firebaseUser = _auth.currentUser;
+      if (firebaseUser == null) {
+        return null;
+      }
 
-  /*Future<user> getCurrentUser() async {
-    user? currentUser = await _firebaseService.getCurrentUser();
-    if (currentUser == null) {
-      throw Exception("User not found");
+      DocumentSnapshot userSnapshot =
+          await _firestore.collection('users').doc(firebaseUser.uid).get();
+
+      if (!userSnapshot.exists) {
+        return null;
+      }
+
+      // Convert Firestore data to user model
+      user currentUser =
+          user.fromFirebaseUser(firebaseUser, userSnapshot.data() as Map<String, dynamic>);
+
+      // Sync with local database
+      await _databaseService.insertUser(currentUser);
+
+      return currentUser;
+    } catch (e) {
+      print("Error fetching current user: $e");
+      return null;
     }
-    return currentUser;
-  }*/
-      Future<user?> getCurrentUser() async {
-        User? firebaseUser = _auth.currentUser;
+  }
 
-        if (firebaseUser == null) {
-            return null; // No user logged in
-        }
-
-        try {
-            DocumentSnapshot userData = await _firestore.collection('users').doc(firebaseUser.uid).get();
-            
-            if (!userData.exists) {
-                return null; // User data not found in Firestore
-            }
-
-            // Convert DocumentSnapshot to your custom user model
-            return user.fromFirebaseUser(firebaseUser, userData.data() as Map<String, dynamic>);
-        } catch (e) {
-            print("Failed to fetch user data: $e");
-            return null;
-        }
-    }
-
-  // Fetches friends from Firestore and updates local storage
+  // Fetch friends and sync to local database
   Future<List<Friend>> loadFriends(String userId) async {
     try {
       // Fetch friends from Firestore
       List<Friend> friends = await _firebaseService.getFriends(userId);
-      print("Is there friends ?: $friends");
-      // For each friend, fetch the upcoming events count
+
+      // Update upcoming events count and sync to local database
       for (var friend in friends) {
         int count = await _firebaseService.getUpcomingEventsCount(friend.friendId);
         friend.upcomingEventsCount = count;
-        
-        // Update local database with friend details
-       // await _databaseService.insertFriend(friend);
+        await _databaseService.insertFriend(friend);
       }
-      
+
       return friends;
     } catch (e) {
       print("Error loading friends: $e");
@@ -69,121 +62,76 @@ class HomeController extends ChangeNotifier {
     }
   }
 
-  /*// Adds a new friend by phone number
-  Future<void> addFriend(String phoneNumber) async {
+  // Add a friend and synchronize with local database
+  Future<void> addFriend(String friendId) async {
     try {
-      // 1. Check if the user exists by phone number
-      var user = await _firebaseService.getUserByPhoneNumber(phoneNumber);
-
-      if (user == null) {
-        // If user does not exist, handle this case (show error message)
-        throw Exception("User not found.");
+      if (friendId.isEmpty) {
+        throw ArgumentError("Friend ID must not be empty.");
       }
 
-      // 2. Create a friend object
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception("No current user logged in.");
+      }
+
+      // Fetch friend data
+      DocumentSnapshot friendSnapshot =
+          await _firestore.collection('users').doc(friendId).get();
+
+      if (!friendSnapshot.exists) {
+        throw Exception("Friend not found.");
+      }
+
+      Map<String, dynamic> friendData = friendSnapshot.data() as Map<String, dynamic>;
+
+      // Fetch current user data
+      DocumentSnapshot currentUserSnapshot =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+
+      if (!currentUserSnapshot.exists) {
+        throw Exception("Current user data not found.");
+      }
+
+      Map<String, dynamic> currentUserData =
+          currentUserSnapshot.data() as Map<String, dynamic>;
+
+      var uuid = Uuid();
+
+      // Create Friend objects for mutual friendship
       Friend newFriend = Friend(
-        id: DateTime.now().millisecondsSinceEpoch.toString(), // Temporary ID generation
-        userId: user.id,
-        friendId: user.id, // The user that is being added
-        friendName: user.fullName,
-        friendAvatar: user.profilePictureUrl, // Assuming this is in the user object
-        upcomingEventsCount: 0, // Default value, can be updated later
+        id: uuid.v4(),
+        userId: currentUser.uid,
+        friendId: friendId,
+        friendName: friendData['fullName'] ?? 'Unknown',
+        friendAvatar: friendData['profilePictureUrl'] ?? 'assets/images/default_avatar.JPG',
+        upcomingEventsCount: 0,
       );
 
-      // 3. Add to Firestore (both ways for mutual friendship)
+      Friend reciprocalFriend = Friend(
+        id: uuid.v4(),
+        userId: friendId,
+        friendId: currentUser.uid,
+        friendName: currentUserData['fullName'] ?? 'Unknown',
+        friendAvatar: currentUserData['profilePictureUrl'] ?? 'assets/images/default_avatar.JPG',
+        upcomingEventsCount: 0,
+      );
+
+      // Add to Firestore and local database
       await _firebaseService.addFriendToFirestore(newFriend);
-
-      // 4. Update local database with the new friend
+      await _firebaseService.addFriendToFirestore(reciprocalFriend);
       await _databaseService.insertFriend(newFriend);
+      await _databaseService.insertFriend(reciprocalFriend);
 
-      // 5. Optionally update friends list
-      loadFriends(user.id);
+      // Refresh friend list
+      await loadFriends(currentUser.uid);
     } catch (e) {
       print("Error adding friend: $e");
     }
-  }*/
-
-  Future<void> addFriend(String friendId) async {
-  if (friendId.isEmpty) {
-    print("Friend ID cannot be empty.");
-    throw ArgumentError("Friend ID must not be empty.");
   }
 
-  try {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      print("No current user logged in.");
-      throw Exception("No current user logged in.");
-    }
-
-    // Fetch friend data
-    DocumentSnapshot friendSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(friendId)
-        .get();
-
-    if (!friendSnapshot.exists) {
-      print("Friend not found.");
-      throw Exception("Friend not found.");
-    }
-    Map<String, dynamic> friendData = friendSnapshot.data() as Map<String, dynamic>;
-
-    // Fetch current user data from Firestore
-    DocumentSnapshot currentUserSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .get();
-
-    if (!currentUserSnapshot.exists) {
-      print("Current user data not found in Firestore.");
-      throw Exception("Current user data not found in Firestore.");
-    }
-    Map<String, dynamic> currentUserData =
-        currentUserSnapshot.data() as Map<String, dynamic>;
-
-    var uuid = Uuid();
-
-    // Friend data for the current user
-    Friend newFriend = Friend(
-      id: uuid.v4(),
-      userId: currentUser.uid,
-      friendId: friendId,
-      friendName: friendData['fullName'] as String? ?? 'Unknown',
-      friendAvatar: friendData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.JPG',
-      upcomingEventsCount: 0,
-    );
-
-    // Reciprocal friend data
-    Friend reciprocalFriend = Friend(
-      id: uuid.v4(),
-      userId: friendId,
-      friendId: currentUser.uid,
-      friendName: currentUserData['fullName'] as String? ?? 'Unknown',
-      friendAvatar: currentUserData['profilePictureUrl'] as String? ?? 'assets/images/default_avatar.JPG',
-      upcomingEventsCount: 0,
-    );
-
-    // Add to Firestore for both users
-    await _firebaseService.addFriendToFirestore(newFriend);
-    await _firebaseService.addFriendToFirestore(reciprocalFriend);
-
-    // Optionally update local database and refresh friend list
-    await loadFriends(currentUser.uid);
-
-    print("Friend added successfully!");
-  } catch (e) {
-    print("Error adding friend: $e");
-    throw Exception("Error adding friend: $e");
-  }
-}
-
-
-
-
-  // Search friends based on query (e.g., name or phone number)
+  // Search friends based on a query
   Future<List<Friend>> searchFriends(String query) async {
     try {
-      // Fetch matching friends from Firestore based on query
       List<Friend> friends = await _firebaseService.searchFriends(query);
       return friends;
     } catch (e) {
@@ -192,71 +140,48 @@ class HomeController extends ChangeNotifier {
     }
   }
 
-  // Navigate to a friend's gift list page
+  // Get potential friends
+  Future<List<user>> getPotentialFriends() async {
+    try {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        return [];
+      }
+
+      QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
+
+      List<user> allUsers = usersSnapshot.docs
+          .map((doc) => user.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      Set<String> friendIds =
+          (await loadFriends(currentUser.uid)).map((f) => f.friendId).toSet();
+      friendIds.add(currentUser.uid);
+
+      return allUsers.where((u) => !friendIds.contains(u.id)).toList();
+    } catch (e) {
+      print("Error fetching potential friends: $e");
+      return [];
+    }
+  }
+
+  // Fetch friend's events
+  Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
+    try {
+      List<Map<String, dynamic>> events = await _firebaseService.getFriendEvents(friendId);
+      return events;
+    } catch (e) {
+      print("Error fetching friend's events: $e");
+      return [];
+    }
+  }
+
+  // Navigate to friend's gift list
   void navigateToGiftList(BuildContext context, Friend friend) {
     Navigator.pushNamed(
-      context, 
-      '/giftList', 
+      context,
+      '/giftList',
       arguments: friend,
     );
   }
-  
-  Future<List<user>> getPotentialFriends() async {
-  User? currentUser = _auth.currentUser;
-  if (currentUser == null) {
-    return []; // Return empty if no user is logged in
-  }
-
-  try {
-    QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
-    List<user> allUsers = usersSnapshot.docs
-      .map((doc) => user.fromMap(doc.data() as Map<String, dynamic>))
-      .toList();
-
-    Set<String> friendIds = (await loadFriends(currentUser.uid)).map((f) => f.friendId).toSet();
-    friendIds.add(currentUser.uid); // Include current user's ID to exclude from potential friends
-
-    return allUsers.where((u) => !friendIds.contains(u.id)).toList();
-  } catch (e) {
-    print("Failed to fetch potential friends: $e");
-    return [];
-  }
-}
-
- // Fetch friend's events and associated gift counts
-  // Fetch events for a specific friend based on their friendId
-   Future<List<Map<String, dynamic>>> getFriendEvents(String friendId) async {
-  try {
-    QuerySnapshot snapshot = await _firestore
-        .collection('events')
-        .where('userId', isEqualTo: friendId)
-        .get();
-
-    final now = DateTime.now();
-
-    // Filter and map only valid upcoming events
-    return snapshot.docs
-        .where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          DateTime eventDate = DateTime.parse(data['date']);
-          return eventDate.isAfter(now); // Only include upcoming events
-        })
-        .map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return {
-            'eventId': data['id'],
-            'eventName': data['name'],
-            'eventDate': data['date'],
-            'location': data['location'],
-            'description': data['description'],
-          };
-        })
-        .toList();
-  } catch (e) {
-    print("Error fetching friend's events: $e");
-    return [];
-  }
-}
-
- 
 }

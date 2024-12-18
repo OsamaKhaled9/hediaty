@@ -4,8 +4,6 @@ import 'package:hediaty/core/models/user.dart';
 import 'package:hediaty/widgets/custom_text_field.dart';
 import 'package:hediaty/widgets/custom_button.dart';
 import 'package:hediaty/widgets/profile_picture_picker.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -26,10 +24,15 @@ class _SignUpPageState extends State<SignUpPage> {
   String _errorMessage = "";
   final UserController _userController = UserController();
 
-  void _onAvatarSelected(String avatarPath) {
-    setState(() {
-      _selectedAvatar = avatarPath;
-    });
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email is required';
+    }
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
   }
 
   String? validatePhoneNumber(String? value)  {
@@ -45,32 +48,32 @@ class _SignUpPageState extends State<SignUpPage> {
     return null;
   }
 
-  String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
   Future<void> _signUp() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty) {
+    // Clear any previous error message
+    setState(() {
+      _errorMessage = "";
+    });
+
+    // Validate required fields
+    if (_nameController.text.isEmpty || 
+        _emailController.text.isEmpty || 
+        _passwordController.text.isEmpty) {
       setState(() {
         _errorMessage = "Please fill all the required fields.";
       });
       return;
     }
 
-    if (validateEmail(_emailController.text) != null) {
+    // Validate email
+    final emailValidationResult = validateEmail(_emailController.text);
+    if (emailValidationResult != null) {
       setState(() {
-        _errorMessage = "Please enter a valid email address.";
+        _errorMessage = emailValidationResult;
       });
       return;
     }
 
+    // Check password match
     if (_passwordController.text != _confirmPasswordController.text) {
       setState(() {
         _errorMessage = "Passwords do not match.";
@@ -78,6 +81,7 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
+    // Create user
     user newUser = user(
       id: "",
       fullName: _nameController.text,
@@ -87,7 +91,14 @@ class _SignUpPageState extends State<SignUpPage> {
       passwordHash: "",
     );
 
-    String? error = await _userController.signUpUser(newUser, _passwordController.text, _phoneController.text, _selectedAvatar);
+    // Attempt sign up
+    String? error = await _userController.signUpUser(
+      newUser, 
+      _passwordController.text, 
+      _phoneController.text, 
+      _selectedAvatar
+    );
+
     if (error != null) {
       setState(() {
         _errorMessage = error;
@@ -164,18 +175,37 @@ class _SignUpPageState extends State<SignUpPage> {
             const SizedBox(height: 24),
             
             // Form Fields
-            _buildTextField(_nameController, "Full Name", Icons.person),
+            CustomTextField(
+              controller: _nameController,
+              labelText: "Full Name",
+              icon: Icons.person,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(_emailController, "Email", Icons.email, 
-              validator: validateEmail),
+            CustomTextField(
+              controller: _emailController,
+              labelText: "Email",
+              icon: Icons.email,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(_passwordController, "Password", Icons.lock, 
-              obscureText: true),
+            CustomTextField(
+              controller: _passwordController,
+              labelText: "Password",
+              icon: Icons.lock,
+              obscureText: true,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(_confirmPasswordController, "Confirm Password", Icons.lock, 
-              obscureText: true),
+            CustomTextField(
+              controller: _confirmPasswordController,
+              labelText: "Confirm Password",
+              icon: Icons.lock,
+              obscureText: true,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(_phoneController, "Phone (Optional)", Icons.phone),
+            CustomTextField(
+              controller: _phoneController,
+              labelText: "Phone (Optional)",
+              icon: Icons.phone,
+            ),
             
             const SizedBox(height: 24),
             
@@ -211,38 +241,6 @@ class _SignUpPageState extends State<SignUpPage> {
           ],
         ),
       ),
-    );
-  }
-
-  // Helper method to build consistent text fields
-  Widget _buildTextField(
-    TextEditingController controller, 
-    String labelText, 
-    IconData icon, {
-    bool obscureText = false,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: labelText,
-        prefixIcon: Icon(icon, color: Color(0xFF2A6BFF)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFFADD8E6)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFF2A6BFF), width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red, width: 1),
-        ),
-      ),
-      validator: validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
     );
   }
 }
