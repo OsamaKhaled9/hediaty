@@ -84,16 +84,28 @@ class DatabaseService {
   }
 
   // Insert user into SQLite database
-  Future<void> insertUser(user user) async {
-    try {
-      final db = await database;
-      print("Database initialized: $db");
-      await db.insert('users', user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
-      print("User inserted");
-    } catch (e) {
-      print("Error inserting user: $e");
+Future<void> insertUser(user user) async {
+  final db = await database;
+  try {
+    // Check if the user already exists
+    final existingUser = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+
+    if (existingUser.isNotEmpty) {
+      print("User already exists in the database.");
+      return;
     }
+
+    // Insert the user if it does not exist
+    await db.insert('users', user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    print("User inserted successfully.");
+  } catch (e) {
+    print("Error inserting user: $e");
   }
+}
 
   // Insert a friend into SQLite database
   Future<void> insertFriend(Friend friend) async {

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,7 +7,7 @@ import 'dart:convert';  // For UTF-8 encoding
 import 'package:hediaty/core/models/friend.dart';  // Import friend model
 import 'package:hediaty/core/models/event.dart';  // Import event model
 import 'package:hediaty/core/models/gift.dart';  
-import 'package:hediaty/controllers/home_controller.dart';
+//import 'package:hediaty/controllers/home_controller.dart';
 import 'package:uuid/uuid.dart';
 
 class FirebaseService {

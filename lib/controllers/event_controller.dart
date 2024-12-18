@@ -119,19 +119,20 @@ class EventController extends ChangeNotifier {
   }
 
   // Fetch the count of events associated with the current user
-  Future<int> getEventCount(String userId) async {
-    try {
-      final querySnapshot = await _firestore
-          .collection('events')
-          .where('userId', isEqualTo: userId)
-          .get();
+Future<int> getEventCount(String userId) async {
+  try {
+    final querySnapshot = await _firestore
+        .collection('events')
+        .where('userId', isEqualTo: userId)
+        .get();
 
-      return querySnapshot.size;
-    } catch (e) {
-      print("Error fetching event count: $e");
-      return 0;
-    }
+    print("Event count for userId $userId: ${querySnapshot.size}");
+    return querySnapshot.size;
+  } catch (e) {
+    print("Error in getEventCount: $e");
+    throw Exception("Error fetching event count.");
   }
+}
 
   // Get gifts associated with an event ID from the local database
   Future<List<Gift>> getGiftsByEventId(String eventId) async {

@@ -21,21 +21,44 @@ class _SearchFriendsWidgetState extends State<SearchFriendsWidget> {
     _loadFriends();
   }
 
-  Future<void> _loadFriends() async {
-    final homeController = Provider.of<HomeController>(context, listen: false);
-    try {
-      var currentUser = await homeController.getCurrentUser();
-      if (currentUser != null) {
-        List<Friend> friends = await homeController.loadFriends(currentUser.id);
+  bool _isLoadingFriends = false; // Add a state variable to track loading
+
+Future<void> _loadFriends() async {
+  // Avoid redundant calls
+  if (_isLoadingFriends) return;
+
+  final homeController = Provider.of<HomeController>(context, listen: false);
+  setState(() {
+    _isLoadingFriends = true; // Indicate that loading is in progress
+  });
+
+  try {
+    var currentUser = await homeController.getCurrentUser();
+
+    if (currentUser != null) {
+      List<Friend> friends = await homeController.loadFriends(currentUser.id);
+
+      // Ensure state update happens only if the widget is still mounted
+      if (mounted) {
         setState(() {
           _allFriends = friends;
           _filteredFriends = friends; // Initially show all friends
+          _isLoadingFriends = false; // Mark loading as completed
         });
       }
-    } catch (e) {
-      print("Error loading friends: $e");
+    } else {
+      print("No current user found.");
+    }
+  } catch (e) {
+    print("Error loading friends: $e");
+    if (mounted) {
+      setState(() {
+        _isLoadingFriends = false; // Mark loading as completed even on error
+      });
     }
   }
+}
+
 
   void _filterFriends(String query) {
     setState(() {

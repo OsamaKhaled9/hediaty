@@ -43,19 +43,28 @@ class UserController extends ChangeNotifier {
 
   // Load user profile from Firestore and sync to SQLite
   Future<user?> loadUserProfile(String userId) async {
-    try {
-      // Fetch user data from Firestore
-      user? firestoreUser = await _firebaseService.getUserById(userId);
+  try {
+    // Fetch user data from Firestore
+    user? firestoreUser = await _firebaseService.getUserById(userId);
 
-      if (firestoreUser != null) {
-        // Sync Firestore user data to SQLite
+    if (firestoreUser != null) {
+      // Check if the user already exists in SQLite
+      user? localUser = await _databaseService.getUser(userId);
+
+      if (localUser == null) {
+        // Insert only if the user doesn't already exist
         await _databaseService.insertUser(firestoreUser);
+        print("User inserted into local database.");
+      } else {
+        print("User already exists in local database.");
       }
-
-      return firestoreUser;
-    } catch (e) {
-      print("Error loading user profile: $e");
-      return null;
     }
+
+    return firestoreUser;
+  } catch (e) {
+    print("Error loading user profile: $e");
+    return null;
   }
+}
+
 }

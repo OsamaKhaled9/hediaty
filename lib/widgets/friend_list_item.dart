@@ -28,6 +28,7 @@ class FriendListItem extends StatelessWidget {
             }
 
             List<Map<String, dynamic>> events = snapshot.data ?? [];
+            print("Events found areeee :events");
             if (events.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
