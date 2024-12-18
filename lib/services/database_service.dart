@@ -138,6 +138,7 @@ class DatabaseService {
       where: 'eventId = ?',
       whereArgs: [eventId],
     );
+  print("Gifts fetched from local storage: $maps"); // Debugging
 
     return List.generate(maps.length, (i) {
       return Gift.fromMap(maps[i]);

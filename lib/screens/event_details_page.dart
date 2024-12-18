@@ -13,8 +13,10 @@ class EventDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use the passed eventId or extract from route arguments
-    final String currentEventId = eventId ?? ModalRoute.of(context)!.settings.arguments as String;
+        // Use the passed eventId or extract from route arguments
+    final String currentEventId =
+        eventId ?? ModalRoute.of(context)!.settings.arguments as String;
+
     final eventController = Provider.of<EventController>(context, listen: false);
 
     return Scaffold(
@@ -35,20 +37,11 @@ class EventDetailsPage extends StatelessWidget {
         stream: eventController.getEventStream(currentEventId),
         builder: (context, eventSnapshot) {
           if (eventSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF2A6BFF),
-              ),
-            );
+            return Center(child: CircularProgressIndicator(color: Color(0xFF2A6BFF)));
           }
 
           if (eventSnapshot.hasError) {
-            return Center(
-              child: Text(
-                "Error: ${eventSnapshot.error}",
-                style: TextStyle(color: Colors.red),
-              ),
-            );
+            return Center(child: Text("Error: ${eventSnapshot.error}", style: TextStyle(color: Colors.red)));
           }
 
           Event? event = eventSnapshot.data;
@@ -57,10 +50,7 @@ class EventDetailsPage extends StatelessWidget {
             return Center(
               child: Text(
                 "Event not found",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Color(0xFF333333),
-                ),
+                style: TextStyle(fontSize: 18, color: Color(0xFF333333)),
               ),
             );
           }
@@ -73,30 +63,33 @@ class EventDetailsPage extends StatelessWidget {
                 children: [
                   // Event Details Section
                   _buildEventDetailsCard(event),
-                  
+
                   SizedBox(height: 16),
-                  
+
                   // Gifts Section
                   Text(
                     "Gifts",
                     style: TextStyle(
-                      fontSize: 20, 
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2A6BFF),
                     ),
                   ),
                   SizedBox(height: 8),
                   _buildGiftsList(eventController, currentEventId),
-                  
+
                   SizedBox(height: 16),
-                  
+
                   // Add Gift Button
                   Center(
                     child: CustomButton(
                       label: "Add Gift",
                       onPressed: () {
-                        // Navigate to add gift page
-                        // Navigator.pushNamed(context, '/add-gift', arguments: currentEventId);
+                        Navigator.pushNamed(
+                          context,
+                          '/create_edit_gift',
+                          arguments: null, // Pass null for creating a new gift
+                        );
                       },
                     ),
                   ),
@@ -130,14 +123,14 @@ class EventDetailsPage extends StatelessWidget {
           Text(
             event.name,
             style: TextStyle(
-              fontSize: 24, 
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2A6BFF),
             ),
           ),
           SizedBox(height: 8),
-          _buildDetailRow(Icons.calendar_today, "Date", 
-            DateFormat('yyyy-MM-dd').format(event.date)),
+          _buildDetailRow(Icons.calendar_today, "Date",
+              DateFormat('yyyy-MM-dd').format(event.date)),
           SizedBox(height: 8),
           _buildDetailRow(Icons.location_on, "Location", event.location),
           SizedBox(height: 8),
@@ -181,39 +174,28 @@ class EventDetailsPage extends StatelessWidget {
     );
   }
 
+    // Build Gifts List
   Widget _buildGiftsList(EventController eventController, String eventId) {
-    return StreamBuilder<List<Gift>>(
-      stream: eventController.getGiftsStream(eventId),
+    return FutureBuilder<List<Gift>>(
+      future: eventController.getGiftsByEventId(eventId), // Fetch gifts locally
       builder: (context, giftSnapshot) {
         if (giftSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF2A6BFF),
-            ),
-          );
+          return Center(child: CircularProgressIndicator());
         }
 
         if (giftSnapshot.hasError) {
           return Center(
-            child: Text(
-              "Error: ${giftSnapshot.error}",
-              style: TextStyle(color: Colors.red),
-            ),
-          );
+              child: Text("Error loading gifts: ${giftSnapshot.error}"));
         }
 
         List<Gift> gifts = giftSnapshot.data ?? [];
 
         if (gifts.isEmpty) {
           return Center(
-            child: Text(
-              "No gifts found for this event",
-              style: TextStyle(
-                color: Color(0xFF666666),
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          );
+              child: Text(
+            "No gifts found for this event.",
+            style: TextStyle(color: Colors.grey),
+          ));
         }
 
         return ListView.separated(
@@ -230,17 +212,9 @@ class EventDetailsPage extends StatelessWidget {
               contentPadding: EdgeInsets.symmetric(horizontal: 0),
               title: Text(
                 gift.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333),
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(
-                "Pledged by: ${gift.name}", // Assuming this is correct
-                style: TextStyle(
-                  color: Color(0xFF666666),
-                ),
-              ),
+              subtitle: Text("Category: ${gift.category}"),
               trailing: Text(
                 "\$${gift.price.toStringAsFixed(2)}",
                 style: TextStyle(
@@ -249,8 +223,12 @@ class EventDetailsPage extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                // Handle gift details navigation
-                // Navigator.pushNamed(context, '/gift-details', arguments: gift);
+                // Navigate to edit the selected gift
+                Navigator.pushNamed(
+                  context,
+                  '/create_edit_gift',
+                  arguments: gift,
+                );
               },
             );
           },

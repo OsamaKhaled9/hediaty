@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hediaty/core/models/event.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:flutter/foundation.dart'; // Required for ChangeNotifier
+import 'package:hediaty/services/database_service.dart';
 
 
 class EventController extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DatabaseService _databaseService = DatabaseService();
 
   // Fetch all events for a specific user
  Stream<List<Event>> loadEvents(String userId) {
@@ -108,4 +110,7 @@ Stream<List<Gift>> getGiftsStream(String eventId) {
       return 0;
     }
   }
+  Future<List<Gift>> getGiftsByEventId(String eventId) async {
+  return await DatabaseService().getGiftsByEventId(eventId);
+}
 }
