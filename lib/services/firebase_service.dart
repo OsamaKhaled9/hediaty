@@ -441,6 +441,21 @@ Future<void> updateGift(Gift gift) async {
   await _firestore.collection('gifts').doc(gift.id).set(gift.toJson());
 }
 
+ Future<List<Event>> getEventsByUserId(String userId) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+          .collection('events')
+          .where('ownerId', isEqualTo: userId)
+          .get();
 
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Event.fromMap(data, doc.id); // Use data with the doc.id
+      }).toList();
+    } catch (e) {
+      print("Error fetching events from Firestore for userId $userId: $e");
+      return [];
+    }
+  }
 
 }

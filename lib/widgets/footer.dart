@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hediaty/screens/event_list_page.dart';
+import 'package:hediaty/screens/gift_list_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Footer extends StatefulWidget {
@@ -89,6 +91,35 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
           ),
           label: 'Events',
         ),
+ BottomNavigationBarItem(
+  icon: GestureDetector(
+    onTap: () {
+      _playButtonAnimation();
+      if (userId != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => GiftListPage()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: User not logged in.")),
+        );
+      }
+    },
+    child: AnimatedBuilder(
+      animation: _buttonScaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _buttonScaleAnimation.value,
+          child: const Icon(FontAwesomeIcons.gift),
+        );
+      },
+    ),
+  ),
+  label: 'Gifts',
+),
+
+
         BottomNavigationBarItem(
           icon: GestureDetector(
             onTap: () {
@@ -97,13 +128,11 @@ class _FooterState extends State<Footer> with SingleTickerProviderStateMixin {
                 Navigator.pushNamed(
                   context,
                   '/profile',
-                  arguments: userId, // Pass the userId as an argument
+                  arguments: userId,
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Error: User not logged in."),
-                  ),
+                  SnackBar(content: Text("Error: User not logged in.")),
                 );
               }
             },

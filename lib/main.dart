@@ -102,23 +102,24 @@ class MyApp extends StatelessWidget {
             );
           },
           '/gift_list': (context) {
-            final String eventId = ModalRoute.of(context)!.settings.arguments as String;
-            return GiftListPage(eventId: eventId);
-          },
+              final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+              final String userId = args['userId'] as String;
+              return GiftListPage();
+            },
           '/create_edit_gift': (context) {
-  final args = ModalRoute.of(context)?.settings.arguments;
+                  final args = ModalRoute.of(context)?.settings.arguments;
 
-  if (args is Map<String, dynamic>) {
-    final Gift? gift = args['gift'] as Gift?;
-    final String eventId = args['eventId'] as String;
-    return CreateEditGiftPage(gift: gift, eventId: eventId);
-  } else if (args is Gift) {
-    // If only a Gift object is passed (fallback logic)
-    return CreateEditGiftPage(gift: args, eventId: args.eventId);
-  } else {
-    throw ArgumentError("Invalid arguments passed to /create_edit_gift");
-  }
-},
+                  if (args is Map<String, dynamic>) {
+                    final Gift? gift = args['gift'] as Gift?;
+                    final String eventId = args['eventId'] as String;
+                    return CreateEditGiftPage(gift: gift, eventId: eventId);
+                  } else if (args is Gift) {
+                    // If only a Gift object is passed (fallback logic)
+                    return CreateEditGiftPage(gift: args, eventId: args.eventId);
+                  } else {
+                    throw ArgumentError("Invalid arguments passed to /create_edit_gift");
+                  }
+                },
           '/gift_details': (context) {
             final String giftId = ModalRoute.of(context)!.settings.arguments as String;
             return GiftDetailsPage(giftId: giftId);

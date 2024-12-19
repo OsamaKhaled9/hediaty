@@ -3,6 +3,8 @@ import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/services/firebase_service.dart';
 import 'package:hediaty/services/database_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class GiftController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
@@ -199,5 +201,57 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
     throw Exception("Failed to update gift data");
   }
 }
+ /// Fetch gifts for a specific user from the local database
+  Future<List<Gift>> getGiftsByUserId(String userId) async {
+    try {
+      final db = await _databaseService.database;
+      final gifts = await db.query(
+        'gifts',
+        where: 'userId = ?',
+        whereArgs: [userId],
+      );
+      return gifts.map((map) => Gift.fromMap(map)).toList();
+    } catch (e) {
+      print("Error fetching gifts from local database: $e");
+      return [];
+    }
+  }
 
+  /// Fetch gifts for a specific user from Firestore
+  Future<List<Gift>> getGiftsFromFirestore(String userId) async {
+    try {
+      final QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+          .collection('gifts')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      return snapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList();
+    } catch (e) {
+      print("Error fetching gifts from Firestore: $e");
+      return [];
+    }
+  }
+
+  /// Delete a gift both locally and from Firestore if applicable
+  Future<void> deleteGift(String giftId, String status) async {
+    try {
+      // Remove the gift from the local database
+      final db = await _databaseService.database;
+      await db.delete(
+        'gifts',
+        where: 'id = ?',
+        whereArgs: [giftId],
+      );
+
+      // If the gift is published or purchased, also remove it from Firestore
+      if (status != 'Available') {
+        await FirebaseFirestore.instance.collection('gifts').doc(giftId).delete();
+      }
+
+      notifyListeners(); // Notify listeners to update the UI
+      print("Gift $giftId deleted successfully.");
+    } catch (e) {
+      print("Error deleting gift: $e");
+    }
+  }
 }

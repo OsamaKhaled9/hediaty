@@ -3,10 +3,13 @@ import 'package:hediaty/core/models/event.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hediaty/services/database_service.dart';
+import 'package:hediaty/services/firebase_service.dart';
 
 class EventController extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final DatabaseService _databaseService = DatabaseService();
+    final FirebaseService _firebaseService = FirebaseService();
+
 
   // Fetch all events for a specific user and update local database
   Stream<List<Event>> loadEvents(String userId) {
@@ -25,10 +28,30 @@ class EventController extends ChangeNotifier {
     });
   }
 
-  /*// Fetch events from local database
-  Future<List<Event>> getLocalEvents(String userId) async {
-    return await _databaseService.getEventsByUserId(userId);
-  }*/
+    // Fetch all events associated with a given userId.
+  Future<List<Event>> getEventsByUserId(String userId) async {
+    try {
+      // Fetch events from Firestore where the ownerId matches the userId.
+      List<Event> firestoreEvents = await _firebaseService.getEventsByUserId(userId);
+
+      // Fetch local events from the local database where the ownerId matches the userId.
+      List<Event> localEvents = await _databaseService.getEventsByUserId(userId);
+
+      // Merge Firestore and local events, prioritizing Firestore data for conflicts.
+      Map<String, Event> eventMap = {
+        for (var event in localEvents) event.id: event,
+      };
+
+      for (var event in firestoreEvents) {
+        eventMap[event.id] = event; // Firestore data overwrites local data if conflict exists.
+      }
+
+      return eventMap.values.toList();
+    } catch (e) {
+      print("Error fetching events for userId $userId: $e");
+      return [];
+    }
+  }
 
   // Create a new event and add it to both Firestore and the local database
   Future<void> createEvent(Event event) async {
@@ -138,4 +161,5 @@ Future<int> getEventCount(String userId) async {
   Future<List<Gift>> getGiftsByEventId(String eventId) async {
     return await _databaseService.getGiftsByEventId(eventId);
   }
+   
 }

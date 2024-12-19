@@ -239,6 +239,27 @@ Future<List<Gift>> getGiftsByEventId(String eventId) async {
     print("Error fetching gifts: $e");
     return [];
   }
+  
+}
+  /// Fetch events from the local database by userId.
+Future<List<Event>> getEventsByUserId(String userId) async {
+  final db = await database;
+
+  try {
+    List<Map<String, dynamic>> results = await db.query(
+      'events',
+      where: 'ownerId = ?',
+      whereArgs: [userId],
+    );
+
+    return results.map((event) {
+      final eventId = event['id'] as String; // Ensure `id` field exists in the map
+      return Event.fromMap(event, eventId); // Pass the map and the event ID
+    }).toList();
+  } catch (e) {
+    print("Error fetching events from local database for userId $userId: $e");
+    return [];
+  }
 }
 
 
