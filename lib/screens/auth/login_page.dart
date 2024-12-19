@@ -83,14 +83,14 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F1F1),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
-          onPressed: () => Navigator.of(context).pop(),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
+            onPressed: () => Navigator.pushReplacementNamed(context, '/landing'),  // Navigate to landing page
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

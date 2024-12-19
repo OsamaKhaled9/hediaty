@@ -248,7 +248,7 @@ Future<List<Event>> getEventsByUserId(String userId) async {
   try {
     List<Map<String, dynamic>> results = await db.query(
       'events',
-      where: 'ownerId = ?',
+      where: 'userId = ?',
       whereArgs: [userId],
     );
 

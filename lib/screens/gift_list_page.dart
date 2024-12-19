@@ -141,7 +141,7 @@ class _GiftListPageState extends State<GiftListPage> {
                     );
                   },
                 ),
-      floatingActionButton: FloatingActionButton(
+      /*floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(
             context,
@@ -151,7 +151,7 @@ class _GiftListPageState extends State<GiftListPage> {
         },
         backgroundColor: const Color(0xFF2A6BFF),
         child: const Icon(Icons.add),
-      ),
+      ),*/
     );
   }
 }

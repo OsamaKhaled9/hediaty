@@ -122,12 +122,10 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF2A6BFF)),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+            leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2D3D)),
+            onPressed: () => Navigator.pushReplacementNamed(context, '/landing'),  // Navigate to landing page
+          ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
