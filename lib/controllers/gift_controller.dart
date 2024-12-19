@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/services/firebase_service.dart';
 import 'package:hediaty/services/database_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hediaty/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 
 class GiftController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
   final DatabaseService _databaseService = DatabaseService();
+  final NotificationService _notificationService = NotificationService();
+
 
   // Stream gifts locally from SQLite for a specific event
   Stream<List<Gift>> getGiftsStream(String eventId) async* {
@@ -49,6 +53,7 @@ class GiftController extends ChangeNotifier {
   }
 
   // Update Gift Status (e.g., Pledge Gift)
+// Update Gift Status (e.g., Pledge Gift)
 Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
   try {
     // Check if the document exists in Firestore
@@ -80,11 +85,38 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
       }
     }
 
+    // Trigger notifications if status changes to "Pledged" or "Purchased"
+    if (status == "Pledged" || status == "Purchased") {
+      final notificationTitle = "Gift Status Updated";
+      final notificationBody = status == "Pledged"
+          ? "A gift has been pledged successfully!"
+          : "A gift has been marked as purchased!";
+
+      // Fetch user notification preferences
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        final user = await _firebaseService.getUserById(userId);
+
+        if (user != null && user.isNotificationsEnabled) {
+          await NotificationService().showNotification(
+            id: giftId.hashCode,
+            title: notificationTitle,
+            body: notificationBody,
+          );
+        }else {
+                print("Notifications are disabled for the user or user not found.");
+              }
+      }else {
+        print("Error: No logged-in user found.");
+      }
+    }
+
     notifyListeners();
   } catch (e) {
     print("Error updating gift status: $e");
   }
 }
+
 
 
   // Pledge a gift if it is available
@@ -247,4 +279,22 @@ Future<List<Gift>> getGiftsByEventId(String eventId) async {
       print("Error deleting gift: $e");
     }
   }
+Stream<void> listenForGiftChanges(String currentUserId) {
+  return _firebaseService.listenForGiftChanges(currentUserId).map((gift) {
+    // Process changes on the stream
+    if (gift.status == 'Pledged' || gift.status == 'Purchased') {
+      String title = 'Gift Status Changed';
+      String body = gift.status == 'Pledged'
+          ? 'A gift has been pledged!'
+          : 'A gift has been purchased!';
+      _notificationService.showNotification(
+        id: gift.id.hashCode,
+        title: title,
+        body: body,
+      );
+    }
+  });
+}
+
+
 }

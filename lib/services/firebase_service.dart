@@ -312,18 +312,20 @@ Future<user?> getCurrentUser() async {
 }
 
      Future<user?> getUserById(String userId) async {
-    try {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
-      if (!userDoc.exists) {
-        print("User not found.");
-        return null;
-      }
-      return user.fromMap(userDoc.data() as Map<String, dynamic>);
-    } catch (e) {
-      print("Error fetching user: $e");
+  try {
+    DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      print("User with ID $userId not found in Firestore.");
       return null;
     }
+    print("Fetched user: ${userDoc.data()}");
+    return user.fromMap(userDoc.data() as Map<String, dynamic>);
+  } catch (e) {
+    print("Error fetching user for ID $userId: $e");
+    return null;
   }
+}
+
 
   Future<void> updateUser(user updatedUser) async {
     try {
@@ -457,5 +459,26 @@ Future<void> updateGift(Gift gift) async {
       return [];
     }
   }
+   Stream<Gift> listenForGiftChanges(String giftId) {
+  try {
+    return _firestore
+        .collection('gifts')
+        .doc(giftId)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.exists) {
+        // Add the gift ID to the data map before passing it to fromMap
+        final data = snapshot.data() as Map<String, dynamic>;
+        data['id'] = snapshot.id;
+        return Gift.fromMap(data);
+      } else {
+        throw Exception("Gift document with ID $giftId does not exist.");
+      }
+    });
+  } catch (e) {
+    print("Error listening for gift changes: $e");
+    rethrow;
+  }
+}
 
 }

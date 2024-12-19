@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hediaty/services/notification_service.dart';
+
 
 // Firebase Config
 import 'firebase_options.dart';
@@ -37,6 +39,8 @@ import 'package:hediaty/screens/pledged_gifts.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
+  await NotificationService().initialize(); // Initialize notifications
+
 
   try {
     await Firebase.initializeApp(

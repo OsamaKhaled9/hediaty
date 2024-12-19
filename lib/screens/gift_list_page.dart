@@ -27,6 +27,8 @@ class _GiftListPageState extends State<GiftListPage> {
     final giftController = Provider.of<GiftController>(context, listen: false);
     final eventController = Provider.of<EventController>(context, listen: false);
     final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    giftController.listenForGiftChanges(currentUserId);
+
 
     try {
       // Fetch all events created by the current user

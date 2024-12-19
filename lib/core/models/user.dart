@@ -41,7 +41,7 @@ class user {
       'phoneNumber': phoneNumber,
       'profilePictureUrl': profilePictureUrl,
       'passwordHash': passwordHash, // Use the hashed password
-      //'isNotificationEnabled': isNotificationEnabled, // Add new field
+      'isNotificationsEnabled': isNotificationsEnabled, // Add new field
     };
   }
 
@@ -54,7 +54,7 @@ class user {
       phoneNumber: json['phoneNumber'],
       profilePictureUrl: json['profilePictureUrl'],
       passwordHash: json['passwordHash'],
-      //isNotificationEnabled: json['isNotificationEnabled'] ?? false, // Handle missing field
+      isNotificationsEnabled: json['isNotificationsEnabled'] ?? false, // Handle missing field
     );
   }
 
