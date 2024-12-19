@@ -7,6 +7,10 @@ import 'package:hediaty/widgets/footer.dart';
 import 'package:hediaty/widgets/friend_list_item.dart';
 import 'package:hediaty/screens/create_edit_event_page.dart';
 import 'package:hediaty/controllers/event_controller.dart';
+import 'package:hediaty/controllers/user_controller.dart';
+import 'package:hediaty/services/notification_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -19,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   final Color textColor = Color(0xFF333333);
 
   TextEditingController _searchController = TextEditingController();
+
   List<Friend> _allFriends = [];
   List<Friend> _filteredFriends = [];
   bool _isLoading = true;
@@ -547,6 +552,42 @@ Widget build(BuildContext context) {
                   _buildTopSection(currentUser, eventController),
                   _buildSearchBar(allFriends),
                   _buildFriendsList(allFriends),
+                  // ---------------- TEST BUTTON START ----------------
+               Padding(
+  padding: const EdgeInsets.all(16.0),
+  child: ElevatedButton(
+    onPressed: () async {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) {
+        print("Error: No logged-in user.");
+        return;
+      }
+
+      // Retrieve user details (assuming a `getUserById` method exists in UserController)
+      final userController = Provider.of<UserController>(context, listen: false);
+      final currentUser = await userController.getUserById(userId);
+
+      if (currentUser?.isNotificationsEnabled == true) {
+        // Trigger a test notification
+        await NotificationService().showNotification(
+          id: 1,
+          title: "Test Notification",
+          body: "This is a test notification.",
+          payload: "test_payload",
+        );
+        print("Test notification sent!");
+      } else {
+        print("Notifications are disabled for the user.");
+      }
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.blueAccent,
+    ),
+    child: Text("Send Test Notification"),
+  ),
+),
+
+                // ---------------- TEST BUTTON END ----------------
                 ],
               );
             },

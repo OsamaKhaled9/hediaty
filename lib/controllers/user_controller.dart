@@ -9,6 +9,22 @@ class UserController extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
   final DatabaseService _databaseService = DatabaseService();
   final SessionService _sessionService = SessionService();
+    /// Fetches user details by their ID from Firestore
+  Future<user?> getUserById(String userId) async {
+    try {
+      final userDoc = await _firebaseService.getUserById(userId);
+      if (userDoc != null) {
+        print("User fetched successfully: ${userDoc.fullName}");
+        return userDoc;
+      } else {
+        print("User not found for ID: $userId");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching user by ID: $e");
+      return null;
+    }
+  }
 
   // Sign up user, authenticate, upload profile pic, and save data
   Future<String?> signUpUser(user user, String password, String phoneNumber, String avatarPath) async {

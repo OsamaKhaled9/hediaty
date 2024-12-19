@@ -6,7 +6,7 @@ class NotificationService {
 
   Future<void> initialize() async {
     const AndroidInitializationSettings androidInitializationSettings =
-        AndroidInitializationSettings('app_icon');
+        AndroidInitializationSettings('custom_notification_icon'); // Replace with your drawable name.
 
     const DarwinInitializationSettings iosInitializationSettings =
         DarwinInitializationSettings();
