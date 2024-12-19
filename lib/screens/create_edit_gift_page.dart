@@ -54,33 +54,34 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
     super.dispose();
   }
 
-  void _saveGift() async {
-    if (_formKey.currentState!.validate()) {
-      final giftController = Provider.of<GiftController>(context, listen: false);
+void _saveGift() async {
+  if (_formKey.currentState!.validate()) {
+    final giftController = Provider.of<GiftController>(context, listen: false);
 
-      // Create or update gift
-      final newGift = Gift(
-        id: widget.gift?.id ?? const Uuid().v4(),
-        eventId: widget.eventId,
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim(),
-        category: _categoryController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
-        imagePath: _imagePath,
-        status: _status,
-      );
+    // Create or update gift
+    final newGift = Gift(
+      id: widget.gift?.id ?? const Uuid().v4(),
+      eventId: widget.eventId,
+      name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _categoryController.text.trim(),
+      price: double.parse(_priceController.text.trim()),
+      imagePath: _imagePath,
+      status: _status,
+    );
 
-      if (widget.gift == null) {
-        // Add a new gift
-        await giftController.addGift(newGift);
-      } else {
-        // Update the existing gift
-        await giftController.updateGiftStatus(newGift.id, newGift.status, newGift.pledgedBy);
-      }
-
-      Navigator.pop(context); // Return to the previous page
+    if (widget.gift == null) {
+      // Add a new gift
+      await giftController.addGift(newGift);
+    } else {
+      // Update all gift data
+      await giftController.updateGiftData(newGift);
     }
+
+    Navigator.pop(context); // Return to the previous page
   }
+}
+
 
   void _selectImage() async {
     // TODO: Implement actual image picker

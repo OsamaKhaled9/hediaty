@@ -302,5 +302,16 @@ Future<List<Gift>> getGiftsByEventId(String eventId) async {
   yield queryResult.map((item) => Gift.fromMap(item)).toList();
 }
 
+Future<void> updateGift(Gift gift) async {
+  final db = await database;
+
+  await db.update(
+    'gifts',
+    gift.toJson(),
+    where: 'id = ?',
+    whereArgs: [gift.id],
+  );
+}
+
 
 }

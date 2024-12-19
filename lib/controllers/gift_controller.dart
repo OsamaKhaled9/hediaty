@@ -183,4 +183,21 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
       yield [];
     }
   }
+  Future<void> updateGiftData(Gift updatedGift) async {
+  try {
+    // Update locally
+    await _databaseService.updateGift(updatedGift);
+
+    // Sync with Firestore if the status is not 'Available'
+    if (updatedGift.status != 'Available') {
+      await _firebaseService.updateGift(updatedGift);
+    }
+
+    notifyListeners();
+  } catch (e) {
+    print("Error updating gift data: $e");
+    throw Exception("Failed to update gift data");
+  }
+}
+
 }

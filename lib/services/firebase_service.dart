@@ -437,6 +437,9 @@ Future<List<Gift>> getGiftsByEventId(String eventId,
     return [];
   }
 }
+Future<void> updateGift(Gift gift) async {
+  await _firestore.collection('gifts').doc(gift.id).set(gift.toJson());
+}
 
 
 
