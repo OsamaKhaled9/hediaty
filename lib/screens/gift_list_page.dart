@@ -57,48 +57,109 @@ class _GiftListPageState extends State<GiftListPage> {
     }
   }
 
-  void _sortGifts() {
-    setState(() {
-      if (_sortBy == 'Name') {
-        _gifts.sort((a, b) => a.name.compareTo(b.name));
-      } else if (_sortBy == 'Category') {
-        _gifts.sort((a, b) => a.category.compareTo(b.category));
-      } else if (_sortBy == 'Status') {
-        _gifts.sort((a, b) => a.status.compareTo(b.status));
-      }
-    });
-  }
+void _sortGifts() {
+  setState(() {
+    if (_sortBy == 'Name') {
+      _gifts.sort((a, b) => _safeCompare(a.name, b.name));
+    } else if (_sortBy == 'Category') {
+      _gifts.sort((a, b) => _safeCompare(a.category, b.category));
+    } else if (_sortBy == 'Status') {
+      _gifts.sort((a, b) => _safeCompare(a.status, b.status));
+    }
+  });
+}
+
+// Helper function to compare strings safely
+int _safeCompare(String? a, String? b) {
+  // Convert null values to empty strings and compare case-insensitively
+  return (a ?? '').toLowerCase().compareTo((b ?? '').toLowerCase());
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Gifts'),
-        backgroundColor: const Color(0xFF2A6BFF),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _sortBy,
-                onChanged: (value) {
-                  setState(() {
-                    _sortBy = value!;
-                    _sortGifts();
-                  });
-                },
-                items: [
-                  const DropdownMenuItem(value: 'Name', child: Text('Sort by Name')),
-                  const DropdownMenuItem(value: 'Category', child: Text('Sort by Category')),
-                  const DropdownMenuItem(value: 'Status', child: Text('Sort by Status')),
-                ],
-                dropdownColor: Colors.white,
-                icon: const Icon(Icons.sort, color: Colors.white),
+appBar: AppBar(
+  title: const Text(
+    'My Gifts',
+    style: TextStyle(
+      color: Color(0xFF2A6BFF),
+      fontWeight: FontWeight.bold,
+      fontSize: 24,
+    ),
+  ),
+  backgroundColor: Colors.white,
+  elevation: 0,
+  actions: [
+    Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _sortBy,
+          onChanged: (value) {
+            setState(() {
+              _sortBy = value!;
+              _sortGifts();
+            });
+          },
+          items: [
+            DropdownMenuItem(
+              value: 'Name',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  'Sort by Name',
+                  style: const TextStyle(
+                    color: Color(0xFF333333),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
+            DropdownMenuItem(
+              value: 'Category',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  'Sort by Category',
+                  style: const TextStyle(
+                    color: Color(0xFF333333),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'Status',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  'Sort by Status',
+                  style: const TextStyle(
+                    color: Color(0xFF333333),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          dropdownColor: Colors.white,
+          iconSize: 24,
+          icon: const Padding(
+            padding: EdgeInsets.only(left: 8.0),
+            child: Icon(
+              Icons.sort,
+              color: Color(0xFF2A6BFF),
+            ),
           ),
-        ],
+        ),
       ),
+    ),
+  ],
+),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _gifts.isEmpty

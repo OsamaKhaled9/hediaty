@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:hediaty/controllers/gift_controller.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hediaty/widgets/gift_list_item.dart';
 
 class PledgedGiftsPage extends StatelessWidget {
   const PledgedGiftsPage({Key? key}) : super(key: key);
@@ -14,13 +15,23 @@ class PledgedGiftsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Pledged Gifts"),
+        title: const Text(
+          "My Pledged Gifts",
+          style: TextStyle(
+            color: Color(0xFF2A6BFF),
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2A6BFF)),
       ),
       body: StreamBuilder<List<Gift>>(
         stream: giftController.getPledgedGifts(currentUser!.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -30,22 +41,29 @@ class PledgedGiftsPage extends StatelessWidget {
           final List<Gift> pledgedGifts = snapshot.data ?? [];
 
           if (pledgedGifts.isEmpty) {
-            return Center(child: Text("You haven't pledged any gifts yet."));
+            return const Center(
+              child: Text(
+                "You haven't pledged any gifts yet.",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            );
           }
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
             itemCount: pledgedGifts.length,
             itemBuilder: (context, index) {
               final gift = pledgedGifts[index];
-              return Card(
-                margin: EdgeInsets.all(10),
-                elevation: 3,
-                child: ListTile(
-                  leading: Image.asset(gift.imagePath, width: 50, height: 50, fit: BoxFit.cover),
-                  title: Text(gift.name),
-                  subtitle: Text("Event ID: ${gift.eventId}\nStatus: ${gift.status}"),
-                  trailing: Text("\$${gift.price.toStringAsFixed(2)}"),
-                ),
+              return GiftListItem(
+                gift: gift,
+                onPublish: null, // No publish action in this view
+                onEdit: null, // No edit action in this view
+                onPledge: null, // No pledge action in this view
+                onPurchase: null, // No purchase action in this view
               );
             },
           );
