@@ -4,10 +4,10 @@ import 'package:hediaty/core/models/gift.dart';
 
 class GiftListItem extends StatefulWidget {
   final Gift gift;
-  final VoidCallback? onPublish; // Nullable callbacks
-  final VoidCallback? onEdit; // Nullable callbacks
-  final VoidCallback? onPledge; // Nullable callbacks
-  final VoidCallback? onPurchase; // Added for Purchase action
+  final VoidCallback? onPublish;
+  final VoidCallback? onEdit;
+  final VoidCallback? onPledge;
+  final VoidCallback? onPurchase;
 
   const GiftListItem({
     Key? key,
@@ -15,7 +15,7 @@ class GiftListItem extends StatefulWidget {
     this.onPublish,
     this.onEdit,
     this.onPledge,
-    this.onPurchase, // Nullable callback
+    this.onPurchase,
   }) : super(key: key);
 
   @override
@@ -25,7 +25,6 @@ class GiftListItem extends StatefulWidget {
 class _GiftListItemState extends State<GiftListItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  bool _isPublished = false;
 
   @override
   void initState() {
@@ -34,7 +33,6 @@ class _GiftListItemState extends State<GiftListItem>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _checkIfPublished();
   }
 
   @override
@@ -43,33 +41,21 @@ class _GiftListItemState extends State<GiftListItem>
     super.dispose();
   }
 
-  Future<void> _checkIfPublished() async {
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('gifts')
-          .where('name', isEqualTo: widget.gift.name)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        setState(() {
-          _isPublished = true;
-        });
-      }
-    } catch (e) {
-      print("Error checking gift publication status: $e");
-    }
-  }
-
   Color _getBorderColor() {
-    if (_isPublished) {
-      return widget.gift.status == "Pledged" ? Colors.green : Colors.blue;
-    } else {
-      return Colors.amber;
+    switch (widget.gift.status) {
+      case "Published":
+        return Colors.blue;
+      case "Pledged":
+        return Colors.green;
+      case "Purchased":
+        return Colors.red;
+      default:
+        return Colors.amber;
     }
   }
 
   Widget _buildActionButton() {
-    if (!_isPublished) {
+    if (widget.gift.status == "Available") {
       return ElevatedButton(
         onPressed: widget.onPublish,
         style: ElevatedButton.styleFrom(
@@ -201,21 +187,22 @@ class _GiftListItemState extends State<GiftListItem>
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Icon(
-                    Icons.edit,
-                    color: Colors.black,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 4.0,
-                        color: Colors.white,
-                        offset: Offset(1.0, 1.0),
-                      ),
-                    ],
+                if (widget.onEdit != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Icon(
+                      Icons.edit,
+                      color: Colors.black,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 4.0,
+                          color: Colors.white,
+                          offset: Offset(1.0, 1.0),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -224,5 +211,3 @@ class _GiftListItemState extends State<GiftListItem>
     );
   }
 }
-
-

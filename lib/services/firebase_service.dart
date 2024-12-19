@@ -424,11 +424,11 @@ Future<List<Gift>> getGiftsByEventId(String eventId,
         _firestore.collection('gifts').where('eventId', isEqualTo: eventId);
 
     if (filterPublishedAndPurchased) {
-      query = query.where('status', whereIn: ['Published', 'Purchased']);
+      query = query.where('status', whereIn: ['Published', 'Purchased','Purchased','Pledged']);
     }
 
     QuerySnapshot<Map<String, dynamic>> snapshot = await query.get();
-
+    print("The snap shot of getfiftsbyEventId from get public stream");
     return snapshot.docs
         .map((doc) => Gift.fromFirestore(doc)) // Pass the DocumentSnapshot to Gift.fromFirestore
         .toList();

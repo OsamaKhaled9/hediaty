@@ -134,7 +134,7 @@ class EventDetailsPage extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.label, color: Color(0xFF2A6BFF)),
+        const Icon(Icons.person, color: Color(0xFF2A6BFF)),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
