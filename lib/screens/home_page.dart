@@ -35,33 +35,63 @@ class _HomePageState extends State<HomePage> {
     _initializeNotificationListener();
   }
 
-  void _initializeNotificationListener() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final currentUserId = currentUser.uid;
+ void _initializeNotificationListener() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
 
-      try {
-        GiftController()
-            .listenForNotifications(currentUserId)
-            .listen((notification) async {
-          final notificationData = notification as Map<String, dynamic>;
+  if (currentUser != null) {
+    final currentUserId = currentUser.uid;
 
-          // Show notification on the phone
-          await NotificationService().showNotification(
-            id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            title: notificationData['title'] ?? 'New Notification',
-            body: notificationData['notificationBody'] ?? 'You have a new notification',
-          );
-        }, onError: (error) {
-          print("Error while listening for notifications: $error");
+    try {
+      // Listen to Firestore for real-time updates
+      _notificationSubscription = FirebaseFirestore.instance
+          .collection('notifications')
+          .where('recipientUserId', isEqualTo: currentUserId)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .listen((snapshot) {
+        setState(() {
+          _notifications = snapshot.docs.map((doc) {
+            final data = doc.data();
+            return {
+              'notificationBody': data['notificationBody'],
+              'timestamp': (data['timestamp'] as Timestamp).toDate(),
+            };
+          }).toList();
         });
-      } catch (e) {
-        print("Error during notification initialization: $e");
-      }
-    } else {
-      print("No user logged in, cannot start notification listener.");
+      }, onError: (error) {
+        print("Error listening for notifications from Firestore: $error");
+      });
+
+      // Listen for new notifications via GiftController
+      GiftController()
+          .listenForNotifications(currentUserId)
+          .listen((notification) async {
+        final notificationData = notification as Map<String, dynamic>;
+
+        // Show the notification on the phone
+        await NotificationService().showNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID
+          title: notificationData['title'] ?? 'New Notification',
+          body: notificationData['notificationBody'] ?? 'You have a new notification',
+        );
+
+        // Add the notification to Firestore
+        await FirebaseFirestore.instance.collection('notifications').add({
+          'recipientUserId': currentUserId,
+          'notificationBody': notificationData['notificationBody'],
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }, onError: (error) {
+        print("Error listening for notifications via GiftController: $error");
+      });
+    } catch (e) {
+      print("Error initializing notification listener: $e");
     }
+  } else {
+    print("No user logged in, cannot start notification listener.");
   }
+}
+
 
   Stream<user?> _getCurrentUserStream(HomeController homeController) async* {
     yield await homeController.getCurrentUser();
@@ -252,50 +282,73 @@ Widget _buildFriendsList(List<Friend> friends, EventController eventController) 
           },
         );
 }
+void _showNotificationsModal(BuildContext context) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
 
-  void _showNotificationsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Notifications',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  if (currentUser == null) return;
+
+  // Fetch notifications from Firestore
+  final notificationsRef = FirebaseFirestore.instance.collection('notifications');
+  final userNotifications = await notificationsRef
+      .where('recipientUserId', isEqualTo: currentUser.uid)
+      .orderBy('timestamp', descending: true)
+      .get();
+
+  final notifications = userNotifications.docs.map((doc) => doc.data()).toList();
+
+  // Show the modal
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: backgroundColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Notifications',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: _notifications.isEmpty
-                    ? const Center(
-                        child: Text('No notifications', style: TextStyle(color: Colors.grey)),
-                      )
-                    : ListView.builder(
-                        itemCount: _notifications.length,
-                        itemBuilder: (context, index) {
-                          final notification = _notifications[index];
-                          return ListTile(
-                            leading: Icon(Icons.notifications, color: primaryColor),
-                            title: Text(
-                              notification['notificationBody'] ?? 'No Details',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          );
-                        },
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: notifications.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No notifications',
+                        style: TextStyle(color: Colors.grey),
                       ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+                    )
+                  : ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = notifications[index];
+                        final String notificationBody =
+                            notification['notificationBody'] ?? 'No Details';
+
+                        return ListTile(
+                          leading: const Icon(Icons.notifications, color: Colors.blue),
+                          title: Text(
+                            notificationBody,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   void _showAddFriendModal(BuildContext context, HomeController homeController) {
     showModalBottomSheet(
