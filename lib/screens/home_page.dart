@@ -8,8 +8,10 @@ import 'package:hediaty/widgets/friend_list_item.dart';
 import 'package:hediaty/screens/create_edit_event_page.dart';
 import 'package:hediaty/controllers/event_controller.dart';
 import 'package:hediaty/controllers/user_controller.dart';
+import 'package:hediaty/controllers/gift_controller.dart';
 import 'package:hediaty/services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 
 class HomePage extends StatefulWidget {
@@ -23,44 +25,75 @@ class _HomePageState extends State<HomePage> {
   final Color textColor = Color(0xFF333333);
 
   TextEditingController _searchController = TextEditingController();
+  StreamSubscription<void>? _notificationSubscription;
 
   List<Friend> _allFriends = [];
   List<Friend> _filteredFriends = [];
+  List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _initializePage();
+    _initializeNotificationListener();
   }
 
   Future<void> _initializePage() async {
-  final homeController = Provider.of<HomeController>(context, listen: false);
-  print("Initializing page...");
-  try {
-    // Fetch current user
-    var currentUser = await homeController.getCurrentUser();
-    print("Current user: ${currentUser?.fullName}");
+    final homeController = Provider.of<HomeController>(context, listen: false);
+    print("Initializing page...");
+    try {
+      // Fetch current user
+      var currentUser = await homeController.getCurrentUser();
+      print("Current user: ${currentUser?.fullName}");
 
-    if (currentUser != null) {
-      // Load friends only if the user exists
-      await _loadFriends(currentUser.id, homeController);
-      print("Friends loaded successfully.");
-    } else {
-      print("No current user found.");
+      if (currentUser != null) {
+        // Load friends only if the user exists
+        await _loadFriends(currentUser.id, homeController);
+        print("Friends loaded successfully.");
+      } else {
+        print("No current user found.");
+      }
+    } catch (e) {
+      print("Error initializing page: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Stop loading
+        });
+        print("Page initialization complete.");
+      }
     }
-  } catch (e) {
-    print("Error initializing page: $e");
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false; // Stop loading
-      });
-      print("Page initialization complete.");
-    }
+  }
+
+void _initializeNotificationListener() {
+  final currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser != null) {
+    final currentUserId = currentUser.uid;
+
+    // Start listening for notifications
+    _notificationSubscription = GiftController()
+        .listenForNotifications(currentUserId)
+        .listen((event) {
+          print("Notification received: $event");
+          // Handle the notification here
+        }, onError: (error) {
+          print("Error while listening for notifications: $error");
+        });
+  } else {
+    print("No user logged in, cannot start notification listener.");
   }
 }
 
+
+@override
+  void dispose() {
+    // Cancel the notification subscription to prevent memory leaks
+    _notificationSubscription?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _loadFriends(String userId, HomeController controller) async {
     try {

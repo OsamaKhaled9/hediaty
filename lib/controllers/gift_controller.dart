@@ -5,6 +5,7 @@ import 'package:hediaty/services/database_service.dart';
 import 'package:hediaty/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 
 
@@ -53,13 +54,42 @@ class GiftController extends ChangeNotifier {
   }
 
   // Update Gift Status (e.g., Pledge Gift)
-// Update Gift Status (e.g., Pledge Gift)
 Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) async {
   try {
-    // Check if the document exists in Firestore
+    // Fetch the gift document from Firestore
     final giftDoc = await _firebaseService.getGiftById(giftId);
 
     if (giftDoc != null) {
+      // Safely access the eventId from the gift document
+      final eventId = giftDoc.eventId; // Assuming Gift class has eventId
+      if (eventId != null) {
+        // Fetch the event document from Firestore using eventId
+        final event = await _firebaseService.getEventById(eventId);
+        if (event != null) {
+          final recipientUserId = event['userId']; // Owner of the event
+          final currentUser = FirebaseAuth.instance.currentUser;
+
+         if (currentUser != null) {
+              final userName = currentUser.displayName ?? currentUser.email ?? "Unknown User";
+              final notificationBody = status == "Pledged"
+                  ? "$userName has pledged a gift!"
+                  : "$userName has purchased a gift!";
+
+              // Add the notification to Firestore
+              await _firebaseService.addNotification(
+                recipientUserId: recipientUserId,
+                notificationBody: notificationBody,
+              );
+            } else {
+              print("Error: No logged-in user found.");
+            }
+        } else {
+          print("Error: Event not found for the gift.");
+        }
+      } else {
+        print("Error: Event ID is null for the gift.");
+      }
+
       // Update the gift in Firestore
       await _firebaseService.updateGiftStatus(giftId, status, pledgedBy);
 
@@ -85,37 +115,13 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
       }
     }
 
-    // Trigger notifications if status changes to "Pledged" or "Purchased"
-    if (status == "Pledged" || status == "Purchased") {
-      final notificationTitle = "Gift Status Updated";
-      final notificationBody = status == "Pledged"
-          ? "A gift has been pledged successfully!"
-          : "A gift has been marked as purchased!";
-
-      // Fetch user notification preferences
-      final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId != null) {
-        final user = await _firebaseService.getUserById(userId);
-
-        if (user != null && user.isNotificationsEnabled) {
-          await NotificationService().showNotification(
-            id: giftId.hashCode,
-            title: notificationTitle,
-            body: notificationBody,
-          );
-        }else {
-                print("Notifications are disabled for the user or user not found.");
-              }
-      }else {
-        print("Error: No logged-in user found.");
-      }
-    }
-
     notifyListeners();
   } catch (e) {
     print("Error updating gift status: $e");
   }
 }
+
+
 
 
 
@@ -258,43 +264,66 @@ Future<List<Gift>> getGiftsByEventId(String eventId) async {
   }
 
   /// Delete a gift both locally and from Firestore if applicable
+   // Delete a gift
   Future<void> deleteGift(String giftId, String status) async {
     try {
-      // Remove the gift from the local database
-      final db = await _databaseService.database;
-      await db.delete(
-        'gifts',
-        where: 'id = ?',
-        whereArgs: [giftId],
-      );
+      // Delete gift from local database
+      await _databaseService.deleteGift(giftId);
 
-      // If the gift is published or purchased, also remove it from Firestore
+      // Delete gift from Firestore if not available
       if (status != 'Available') {
-        await FirebaseFirestore.instance.collection('gifts').doc(giftId).delete();
+        await _firebaseService.deleteGift(giftId);
       }
 
-      notifyListeners(); // Notify listeners to update the UI
-      print("Gift $giftId deleted successfully.");
+      notifyListeners();
     } catch (e) {
       print("Error deleting gift: $e");
     }
   }
-Stream<void> listenForGiftChanges(String currentUserId) {
-  return _firebaseService.listenForGiftChanges(currentUserId).map((gift) {
-    // Process changes on the stream
-    if (gift.status == 'Pledged' || gift.status == 'Purchased') {
-      String title = 'Gift Status Changed';
-      String body = gift.status == 'Pledged'
-          ? 'A gift has been pledged!'
-          : 'A gift has been purchased!';
-      _notificationService.showNotification(
-        id: gift.id.hashCode,
-        title: title,
-        body: body,
-      );
-    }
-  });
+// Stream for listening to gift changes
+  Stream<void> listenForGiftChanges(String currentUserId) {
+    return _firebaseService.listenForGiftChanges(currentUserId).map((gift) {
+      if (gift.status == 'Pledged' || gift.status == 'Purchased') {
+        String title = 'Gift Status Changed';
+        String body = gift.status == 'Pledged'
+            ? 'A gift has been pledged!'
+            : 'A gift has been purchased!';
+        _notificationService.showNotification(
+          id: gift.id.hashCode,
+          title: title,
+          body: body,
+        );
+      }
+    });
+  }
+
+ // Stream real-time notifications for the current user
+Stream<Map<String, dynamic>> listenForNotifications(String currentUserId) {
+  return FirebaseFirestore.instance
+      .collection('notifications')
+      .where('recipientUserId', isEqualTo: currentUserId)
+      .orderBy('timestamp', descending: true)
+      .snapshots()
+      .asyncExpand((querySnapshot) async* {
+        for (var change in querySnapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            // Yield the notification details
+            yield {
+              'notificationBody': change.doc['notificationBody'],
+              'timestamp': change.doc['timestamp'],
+            };
+
+            // Optionally display the notification locally
+            NotificationService().showNotification(
+              id: change.doc.id.hashCode,
+              title: "New Notification",
+              body: change.doc['notificationBody'],
+            );
+          }
+        }
+      });
 }
+
 
 
 }

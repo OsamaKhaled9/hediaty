@@ -480,5 +480,33 @@ Future<void> updateGift(Gift gift) async {
     rethrow;
   }
 }
+ Future<Map<String, dynamic>?> getEventById(String eventId) async {
+    try {
+      final eventDoc = await _firestore.collection('events').doc(eventId).get();
+      if (eventDoc.exists) {
+        return eventDoc.data();
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching event by ID: $e");
+      return null;
+    }
+  }
+
+Future<void> addNotification({
+  required String recipientUserId,
+  required String notificationBody,
+}) async {
+  try {
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'recipientUserId': recipientUserId,
+      'notificationBody': notificationBody,
+      'timestamp': FieldValue.serverTimestamp(),
+      'read': false, // Default: Unread
+    });
+  } catch (e) {
+    print("Error adding notification: $e");
+  }
+}
 
 }
