@@ -37,10 +37,10 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
     _descriptionController = TextEditingController(text: widget.gift?.description ?? '');
     _categoryController = TextEditingController(text: widget.gift?.category ?? '');
     _priceController = TextEditingController(
-      text: widget.gift?.price != null ? widget.gift!.price.toString() : ''
+      text: widget.gift?.price != null ? widget.gift!.price.toString() : '',
     );
 
-    _imagePath = widget.gift?.imagePath ?? 'assets/images/default_gift.png';
+    _imagePath = widget.gift?.imagePath ?? "https://img.lovepik.com/element/40202/2980.png_860.png";
     _status = widget.gift?.status ?? 'Available';
   }
 
@@ -54,39 +54,38 @@ class _CreateEditGiftPageState extends State<CreateEditGiftPage> {
     super.dispose();
   }
 
-void _saveGift() async {
-  if (_formKey.currentState!.validate()) {
-    final giftController = Provider.of<GiftController>(context, listen: false);
+  void _saveGift() async {
+    if (_formKey.currentState!.validate()) {
+      final giftController = Provider.of<GiftController>(context, listen: false);
 
-    // Create or update gift
-    final newGift = Gift(
-      id: widget.gift?.id ?? const Uuid().v4(),
-      eventId: widget.eventId,
-      name: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      category: _categoryController.text.trim(),
-      price: double.parse(_priceController.text.trim()),
-      imagePath: _imagePath,
-      status: _status,
-    );
+      // Create or update gift
+      final newGift = Gift(
+        id: widget.gift?.id ?? const Uuid().v4(),
+        eventId: widget.eventId,
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _categoryController.text.trim(),
+        price: double.parse(_priceController.text.trim()),
+        imagePath: _imagePath,
+        status: _status,
+      );
 
-    if (widget.gift == null) {
-      // Add a new gift
-      await giftController.addGift(newGift);
-    } else {
-      // Update all gift data
-      await giftController.updateGiftData(newGift);
+      if (widget.gift == null) {
+        // Add a new gift
+        await giftController.addGift(newGift);
+      } else {
+        // Update all gift data
+        await giftController.updateGiftData(newGift);
+      }
+
+      Navigator.pop(context); // Return to the previous page
     }
-
-    Navigator.pop(context); // Return to the previous page
   }
-}
 
-
-  void _selectImage() async {
-    // TODO: Implement actual image picker
+  void _selectImage() {
+    // Update to the predefined URL
     setState(() {
-      _imagePath = 'assets/images/sample_gift.png';
+      _imagePath = "https://img.lovepik.com/element/40202/2980.png_860.png";
     });
   }
 
@@ -96,8 +95,8 @@ void _saveGift() async {
       appBar: AppBar(
         title: Text(
           widget.gift == null ? "Create Gift" : "Edit Gift",
-          style: TextStyle(
-            color: const Color(0xFF2A6BFF),
+          style: const TextStyle(
+            color: Color(0xFF2A6BFF),
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -118,18 +117,39 @@ void _saveGift() async {
                   controller: _nameController,
                   labelText: "Gift Name",
                   icon: Icons.card_giftcard,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Gift name is required";
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: _descriptionController,
                   labelText: "Description",
                   icon: Icons.description,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Description is required";
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: _categoryController,
                   labelText: "Category",
                   icon: Icons.category,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Category is required";
+                    }
+                    if (RegExp(r'\d').hasMatch(value)) {
+                      return "Category cannot contain numbers";
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
@@ -137,6 +157,15 @@ void _saveGift() async {
                   labelText: "Price",
                   icon: Icons.attach_money,
                   keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Price is required";
+                    }
+                    if (!RegExp(r'^\d+(\.\d+)?$').hasMatch(value)) {
+                      return "Price must be a valid number";
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 // Image Selection Section

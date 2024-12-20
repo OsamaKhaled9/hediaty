@@ -112,14 +112,30 @@ class _GiftListItemState extends State<GiftListItem>
             child: Stack(
               children: [
                 Opacity(
-                  opacity: 0.3,
-                  child: Image.asset(
-                    widget.gift.imagePath,
-                    height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                    opacity: 0.3,
+                    child: Image.network(
+                      widget.gift.imagePath, // Attempt to load the image from the network
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          return child; // Return the image if successfully loaded
+                        }
+                        return Center(
+                          child: CircularProgressIndicator(), // Show a loading spinner while the image loads
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/images/default_gift.png', // Fallback to asset image if loading fails
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
                   ),
-                ),
                 Positioned.fill(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),

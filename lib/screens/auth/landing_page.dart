@@ -26,6 +26,10 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -36,7 +40,7 @@ class _LandingPageState extends State<LandingPage> {
               fit: BoxFit.cover,
             ),
           ),
-          // Overlay to control background opacity and add gradient
+          // Overlay for gradient and opacity
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -52,20 +56,23 @@ class _LandingPageState extends State<LandingPage> {
           // Content
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.08,
+                vertical: screenHeight * 0.05,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  // App Title with Enhanced Typography
-                  const Text(
+                  // App Title
+                  Text(
                     'Hedieaty',
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: screenWidth * 0.12, // Scaled font size
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: 1.2,
-                      shadows: [
+                      shadows: const [
                         Shadow(
                           offset: Offset(0, 2),
                           blurRadius: 4,
@@ -74,17 +81,17 @@ class _LandingPageState extends State<LandingPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: screenHeight * 0.02),
 
-                  // New Slogan with Refined Styling
-                  const Text(
+                  // Slogan
+                  Text(
                     'A world of gifts, at your fingertips.',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: screenWidth * 0.06,
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.5,
-                      shadows: [
+                      shadows: const [
                         Shadow(
                           offset: Offset(0, 2),
                           blurRadius: 4,
@@ -93,9 +100,9 @@ class _LandingPageState extends State<LandingPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 60),
+                  SizedBox(height: screenHeight * 0.08),
 
-                  // Sign Up Button with Glass Effect
+                  // Get Started Button
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -114,28 +121,31 @@ class _LandingPageState extends State<LandingPage> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2A6BFF),
-                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Get Started',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: screenWidth * 0.05,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1,
-                          color: Colors.white,  // Changed to white
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: screenHeight * 0.03),
 
-                  // Compact Login Option with Container
+                  // Login Option
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.03,
+                        vertical: screenHeight * 0.01,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(16),
@@ -147,13 +157,13 @@ class _LandingPageState extends State<LandingPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
+                          Text(
                             'Already have an account?',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: screenWidth * 0.035,
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
-                              shadows: [
+                              shadows: const [
                                 Shadow(
                                   offset: Offset(0, 1),
                                   blurRadius: 2,
@@ -162,13 +172,16 @@ class _LandingPageState extends State<LandingPage> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: screenWidth * 0.02),
                           GestureDetector(
                             onTap: () {
                               Navigator.pushReplacementNamed(context, '/login');
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.02,
+                                vertical: screenHeight * 0.005,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
@@ -180,11 +193,11 @@ class _LandingPageState extends State<LandingPage> {
                                   ),
                                 ],
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Log In',
                                 style: TextStyle(
-                                  color: Color(0xFF2A6BFF),
-                                  fontSize: 14,
+                                  color: const Color(0xFF2A6BFF),
+                                  fontSize: screenWidth * 0.035,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
