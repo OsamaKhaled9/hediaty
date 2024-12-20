@@ -129,6 +129,9 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
 }
 
 
+void refreshGifts(String eventId) {
+  notifyListeners();
+}
 
 
 
