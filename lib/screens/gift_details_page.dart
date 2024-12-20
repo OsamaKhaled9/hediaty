@@ -73,6 +73,7 @@ class GiftDetailsPage extends StatelessWidget {
                 // Pledge Button
                 if (gift.status == "Available")
                   ElevatedButton(
+                    key: Key('Pledged_gift_button'), // Add a unique key
                     onPressed: () async {
                       await giftController.pledgeGift(giftId, currentUser!.uid);
                       Navigator.pop(context);

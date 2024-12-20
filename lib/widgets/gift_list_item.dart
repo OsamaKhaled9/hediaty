@@ -64,6 +64,7 @@ class _GiftListItemState extends State<GiftListItem>
       );
     } else if (widget.gift.status == "Published") {
       return ElevatedButton(
+        key: const Key('PledgeButton'), // Add a unique key here
         onPressed: widget.onPledge,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,

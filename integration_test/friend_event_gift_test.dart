@@ -41,24 +41,45 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Step 6: View Event Details
-   final eventArrowButton = find.byType(ListTile).first; // Assuming ListTile is used for events
+     final eventArrowButton = find.byKey(Key('event_0')); // Assuming 'event_0' is the first event's key
+    expect(eventArrowButton, findsOneWidget);
     await tester.tap(eventArrowButton);
     await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Verify Event Details Screen
-    expect(find.byKey(Key('eventDetailsText')), findsOneWidget);
+    final eventDetailsText = find.byKey(Key('eventDetailsText'));
+    expect(eventDetailsText, findsOneWidget);
 
-    // Step 7: Pledge a Gift
-    final pledgeButton = find.widgetWithText(ElevatedButton, 'Pledge').first;
-    await tester.tap(pledgeButton);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+     // Step 7: Scroll and find the Pledge button
+  final pledgeButton = find.byKey(Key('PledgeButton'));
+
+  // Wait for the button to appear in the widget tree
+  await tester.pumpAndSettle(const Duration(seconds: 5));
+
+  // Scroll until the button becomes visible
+  await tester.scrollUntilVisible(
+    pledgeButton,
+    50.0, // Scroll increment
+    scrollable: find.byType(Scrollable).first,
+  );
+
+  expect(pledgeButton, findsOneWidget); // Ensure the button is present
+  await tester.tap(pledgeButton); // Tap the pledge button
+  await tester.pumpAndSettle(const Duration(seconds: 5));
+
+
+      // Go back to Profile
+    final backToProfilefromeventButton = find.byTooltip('Back');
+    await tester.tap(backToProfilefromeventButton);
+    await tester.pumpAndSettle();
 
     // Step 8: Tap outside to close the modal
     await tester.tapAt(const Offset(0, 0));
     await tester.pumpAndSettle();
 
     // Step 9: Navigate to Profile
-    final profileButton = find.byIcon(Icons.person);
+    final profileButton = find.byIcon(Icons.account_circle);
     await tester.tap(profileButton);
     await tester.pumpAndSettle(const Duration(seconds: 5));
 

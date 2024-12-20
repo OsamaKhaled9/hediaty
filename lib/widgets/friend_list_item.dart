@@ -62,7 +62,7 @@ class FriendListItem extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final event = events[index];
                        return ListTile(
-                            key: Key('event_${event['eventId']}'), // Assign a unique key
+                            key: Key('event_${index}'), // Dynamically assigned for testing
                             leading: Icon(Icons.event, color: Colors.blueAccent),
                             title: Text(event['eventName'], style: TextStyle(fontWeight: FontWeight.bold)),
                             subtitle: Text(
