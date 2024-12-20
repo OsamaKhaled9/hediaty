@@ -34,6 +34,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Event Details"),
+        key: Key('eventDetailsText'), // Assign a key here
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF2A6BFF)),

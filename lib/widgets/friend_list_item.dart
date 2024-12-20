@@ -61,25 +61,26 @@ class FriendListItem extends StatelessWidget {
                       itemCount: events.length,
                       itemBuilder: (context, index) {
                         final event = events[index];
-                        return ListTile(
-                          leading: Icon(Icons.event, color: Colors.blueAccent),
-                          title: Text(event['eventName'], style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                            "Date: ${event['eventDate']}\nGifts: ${event['giftCount'] ?? 0}",
-                          ),
-                          trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EventDetailsPage(
-                                  eventId: event['eventId'], // Pass the event ID
-                                  currentUserId: currentUserId, // Pass the current user ID
+                       return ListTile(
+                            key: Key('event_${event['eventId']}'), // Assign a unique key
+                            leading: Icon(Icons.event, color: Colors.blueAccent),
+                            title: Text(event['eventName'], style: TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(
+                              "Date: ${event['eventDate']}\nGifts: ${event['giftCount'] ?? 0}",
+                            ),
+                            trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EventDetailsPage(
+                                    eventId: event['eventId'], // Pass the event ID
+                                    currentUserId: currentUserId, // Pass the current user ID
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        );
+                              );
+                            },
+                          );
                       },
                     ),
                   ),

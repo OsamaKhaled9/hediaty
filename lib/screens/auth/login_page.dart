@@ -119,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
                   TextFormField(
+                    key: Key('emailField'), // Add a unique key for email
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -144,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
+                    key: Key('passwordField'), // Add a unique key for password
                     controller: _passwordController,
                     obscureText: _isObscured,
                     validator: (value) {
@@ -179,6 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      key: Key('signInButton'), // Add a unique key for the button
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2A6BFF),

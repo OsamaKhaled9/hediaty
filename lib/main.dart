@@ -36,7 +36,12 @@ import 'package:hediaty/screens/gift_details_page.dart';
 import 'package:hediaty/screens/create_edit_event_page.dart';
 import 'package:hediaty/screens/pledged_gifts.dart';
 
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'main.dart' as app; // Import your app's main.dart file
+
 void main() async {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   await NotificationService().initialize(); // Initialize notifications

@@ -140,79 +140,80 @@ class _LandingPageState extends State<LandingPage> {
                   SizedBox(height: screenHeight * 0.03),
 
                   // Login Option
-                  Center(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.03,
-                        vertical: screenHeight * 0.01,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Already have an account?',
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.035,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              shadows: const [
-                                Shadow(
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                  color: Color.fromRGBO(0, 0, 0, 0.3),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: screenWidth * 0.02),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.02,
-                                vertical: screenHeight * 0.005,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                'Log In',
-                                style: TextStyle(
-                                  color: const Color(0xFF2A6BFF),
-                                  fontSize: screenWidth * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                Center(
+  child: Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: screenWidth * 0.03,
+      vertical: screenHeight * 0.01,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.15),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Colors.white.withOpacity(0.3),
+        width: 1,
+      ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Already have an account?',
+          style: TextStyle(
+            fontSize: screenWidth * 0.035,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            shadows: const [
+              Shadow(
+                offset: Offset(0, 1),
+                blurRadius: 2,
+                color: Color.fromRGBO(0, 0, 0, 0.3),
               ),
+            ],
+          ),
+        ),
+        SizedBox(width: screenWidth * 0.02),
+        GestureDetector(
+          key: const Key('alreadyHaveAccountButton'), // Add the key here
+          onTap: () {
+            Navigator.pushReplacementNamed(context, '/login');
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.02,
+              vertical: screenHeight * 0.005,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              'Log In',
+              style: TextStyle(
+                color: const Color(0xFF2A6BFF),
+                fontSize: screenWidth * 0.035,
+                fontWeight: FontWeight.w800,
+                  ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    ),
+  ),
+),
+                ]
+            ),
+          ),
+          )
+        ]
+    )
     );
   }
 }

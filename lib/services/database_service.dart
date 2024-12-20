@@ -33,7 +33,8 @@ class DatabaseService {
               email TEXT,
               phoneNumber TEXT,
               profilePictureUrl TEXT,
-              passwordHash TEXT
+              passwordHash TEXT,
+              isNotificationsEnabled BOOLEAN
             )
           ''');
 
