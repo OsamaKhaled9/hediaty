@@ -84,21 +84,24 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Step 10: Verify Pledged Gift
-    final pledgedGiftsButton = find.widgetWithText(ListTile, 'My Pledged Gifts');
+    final pledgedGiftsButton = find.widgetWithText(ListTile, 'Pledged Gifts');
     await tester.tap(pledgedGiftsButton);
     await tester.pumpAndSettle();
 
-    // Check if the pledged gift is displayed
-    expect(find.text('Gift Name'), findsOneWidget);
+    final String giftName = 'Ashraf Emulator test 9'; // Replace with the dynamic gift name
 
+    // Check if the pledged gift with the specific name is displayed
+    expect(find.text(giftName), findsOneWidget);
+    
     // Step 11: Go back to Profile
     final backToProfileButton = find.byTooltip('Back');
     await tester.tap(backToProfileButton);
     await tester.pumpAndSettle();
 
-    // Step 12: Go back to Home
-    final homeButton = find.byIcon(Icons.home);
-    await tester.tap(homeButton);
+   // Step 11: Go back to Profile
+    final backToHomeButton = find.byTooltip('Back');
+    await tester.tap(backToHomeButton);
     await tester.pumpAndSettle();
+
   });
 }
