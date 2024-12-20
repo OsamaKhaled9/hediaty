@@ -161,5 +161,19 @@ Future<int> getEventCount(String userId) async {
   Future<List<Gift>> getGiftsByEventId(String eventId) async {
     return await _databaseService.getGiftsByEventId(eventId);
   }
+  Stream<int> getEventCountStream(String userId) {
+  try {
+    // Use Firestore to listen for real-time updates on the "events" collection
+    return FirebaseFirestore.instance
+        .collection('events') // Replace with your actual Firestore collection
+        .where('userId', isEqualTo: userId) // Filter by userId
+        .snapshots()
+        .map((snapshot) => snapshot.size); // Map the snapshot to the count of documents
+  } catch (e) {
+    print("Error fetching event count stream: $e");
+    return Stream.value(0); // Return 0 on error
+  }
+}
+
    
 }

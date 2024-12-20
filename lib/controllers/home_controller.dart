@@ -184,4 +184,20 @@ class HomeController extends ChangeNotifier {
       arguments: friend,
     );
   }
+  Stream<List<Friend>> getFriendsStream(String userId) {
+  try {
+    // Use Firestore to listen for real-time updates on the "friends" collection
+    return FirebaseFirestore.instance
+        .collection('friends') // Replace with your actual Firestore collection
+        .where('userId', isEqualTo: userId) // Filter by userId
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Friend.fromFirestore(doc)) // Convert Firestore data to Friend model
+            .toList());
+  } catch (e) {
+    print("Error fetching friends stream: $e");
+    return Stream.value([]); // Return an empty list on error
+  }
+}
+
 }

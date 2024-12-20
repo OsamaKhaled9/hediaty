@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Friend {
     final String id;
     final String userId;
@@ -36,4 +38,15 @@ class Friend {
       'upcomingEventsCount': upcomingEventsCount,
     };
   }
+  factory Friend.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+  final data = doc.data()!;
+  return Friend(
+    id: doc.id,
+    userId: data['userId'],
+    friendId: data['friendId'],
+    friendName: data['friendName'],
+    friendAvatar: data['friendAvatar'],
+    upcomingEventsCount: data['upcomingEventsCount'] ?? 0,
+  );
+}
 }
