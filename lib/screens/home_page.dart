@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:hediaty/widgets/footer.dart';
 import 'package:hediaty/widgets/friend_list_item.dart';
 import 'package:hediaty/controllers/event_controller.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   @override

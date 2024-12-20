@@ -8,7 +8,7 @@ import 'package:hediaty/widgets/gift_list_item.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class EventDetailsPage extends StatelessWidget {
+class EventDetailsPage extends StatefulWidget {
   final String currentUserId;
   final String eventId;
 
@@ -17,6 +17,14 @@ class EventDetailsPage extends StatelessWidget {
     required this.currentUserId,
     required this.eventId,
   }) : super(key: key);
+
+  @override
+  _EventDetailsPageState createState() => _EventDetailsPageState();
+}
+
+class _EventDetailsPageState extends State<EventDetailsPage> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  List<Gift> _gifts = []; // Local copy of gifts for animations
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +39,7 @@ class EventDetailsPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Color(0xFF2A6BFF)),
       ),
       body: StreamBuilder<Event?>(
-        stream: eventController.getEventStream(eventId),
+        stream: eventController.getEventStream(widget.eventId),
         builder: (context, eventSnapshot) {
           if (eventSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -51,7 +59,7 @@ class EventDetailsPage extends StatelessWidget {
             );
           }
 
-          final isOwner = event.userId == currentUserId;
+          final isOwner = event.userId == widget.currentUserId;
 
           return SingleChildScrollView(
             child: Padding(
@@ -61,16 +69,16 @@ class EventDetailsPage extends StatelessWidget {
                 children: [
                   _buildEventDetailsCard(event),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     "Gifts",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2A6BFF),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildGiftsList(context, giftController, eventId, isOwner),
+                  _buildGiftsList(context, giftController, widget.eventId, isOwner),
                   if (isOwner)
                     Center(
                       child: CustomButton(
@@ -79,7 +87,7 @@ class EventDetailsPage extends StatelessWidget {
                           Navigator.pushNamed(
                             context,
                             '/create_edit_gift',
-                            arguments: {'eventId': eventId},
+                            arguments: {'eventId': widget.eventId},
                           );
                         },
                       ),
@@ -119,22 +127,22 @@ class EventDetailsPage extends StatelessWidget {
               color: Color(0xFF2A6BFF),
             ),
           ),
+          const SizedBox(height: 16),
+          _buildDetailRow(Icons.calendar_today, "Date", event.date.toString()),
           const SizedBox(height: 8),
-          _buildDetailRow("Date", event.date.toString()),
+          _buildDetailRow(Icons.location_on, "Location", event.location),
           const SizedBox(height: 8),
-          _buildDetailRow("Location", event.location),
-          const SizedBox(height: 8),
-          _buildDetailRow("Description", event.description),
+          _buildDetailRow(Icons.description, "Description", event.description),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.person, color: Color(0xFF2A6BFF)),
+        Icon(icon, color: const Color(0xFF2A6BFF)),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -164,62 +172,104 @@ class EventDetailsPage extends StatelessWidget {
           return Center(child: Text("Error: ${snapshot.error}"));
         }
 
-        List<Gift> gifts = snapshot.data ?? [];
+        final gifts = snapshot.data ?? [];
 
-        if (gifts.isEmpty) {
+        // Add new items to AnimatedList
+        _updateAnimatedList(gifts);
+
+        if (_gifts.isEmpty) {
           return const Center(
             child: Text("No gifts found for this event."),
           );
         }
 
-        return ListView.builder(
+        return AnimatedList(
+          key: _listKey,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: gifts.length,
-          itemBuilder: (context, index) {
-            final gift = gifts[index];
-            return GiftListItem(
-              gift: gift,
-              onPublish: isOwner && gift.status == "Available"
-                  ? () async {
-                      await giftController.updateGiftStatus(
-                        gift.id,
-                        "Published",
-                        null,
-                      );
-                    }
-                  : null,
-              onEdit: isOwner && gift.status != "Purchased"
-                  ? () {
-                      Navigator.pushNamed(
-                        context,
-                        '/create_edit_gift',
-                        arguments: gift,
-                      );
-                    }
-                  : null,
-              onPledge: !isOwner && gift.status == "Published"
-                  ? () async {
-                      await giftController.updateGiftStatus(
-                        gift.id,
-                        "Pledged",
-                        FirebaseAuth.instance.currentUser!.uid,
-                      );
-                    }
-                  : null,
-              onPurchase: !isOwner && gift.status == "Pledged"
-                  ? () async {
-                      await giftController.updateGiftStatus(
-                        gift.id,
-                        "Purchased",
-                        FirebaseAuth.instance.currentUser!.uid,
-                      );
-                    }
-                  : null,
+          initialItemCount: _gifts.length,
+          itemBuilder: (context, index, animation) {
+            final gift = _gifts[index];
+            return SizeTransition(
+              sizeFactor: animation,
+              child: GiftListItem(
+                gift: gift,
+                onPublish: isOwner && gift.status == "Available"
+                    ? () async {
+                        _updateGiftLocally(gift, index, "Published");
+                        await giftController.updateGiftStatus(
+                          gift.id,
+                          "Published",
+                          null,
+                        );
+                      }
+                    : null,
+                onEdit: isOwner && gift.status != "Purchased"
+                    ? () {
+                        Navigator.pushNamed(
+                          context,
+                          '/create_edit_gift',
+                          arguments: gift,
+                        );
+                      }
+                    : null,
+                onPledge: !isOwner && gift.status == "Published"
+                    ? () async {
+                        _updateGiftLocally(gift, index, "Pledged");
+                        await giftController.updateGiftStatus(
+                          gift.id,
+                          "Pledged",
+                          FirebaseAuth.instance.currentUser!.uid,
+                        );
+                      }
+                    : null,
+                onPurchase: !isOwner && gift.status == "Pledged"
+                    ? () async {
+                        _updateGiftLocally(gift, index, "Purchased");
+                        await giftController.updateGiftStatus(
+                          gift.id,
+                          "Purchased",
+                          FirebaseAuth.instance.currentUser!.uid,
+                        );
+                      }
+                    : null,
+              ),
             );
           },
         );
       },
     );
+  }
+
+  void _updateAnimatedList(List<Gift> updatedGifts) {
+    final diff = updatedGifts.length - _gifts.length;
+
+    // Add new items
+    if (diff > 0) {
+      for (var i = _gifts.length; i < updatedGifts.length; i++) {
+        _gifts.add(updatedGifts[i]);
+        _listKey.currentState?.insertItem(i);
+      }
+    }
+
+    // Remove excess items
+    if (diff < 0) {
+      for (var i = _gifts.length - 1; i >= updatedGifts.length; i--) {
+        final removedItem = _gifts.removeAt(i);
+        _listKey.currentState?.removeItem(
+          i,
+          (context, animation) => SizeTransition(
+            sizeFactor: animation,
+            child: GiftListItem(gift: removedItem),
+          ),
+        );
+      }
+    }
+  }
+
+  void _updateGiftLocally(Gift gift, int index, String newStatus) {
+    setState(() {
+      _gifts[index] = gift.copyWith(status: newStatus);
+    });
   }
 }

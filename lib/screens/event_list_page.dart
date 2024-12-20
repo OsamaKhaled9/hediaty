@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:hediaty/controllers/event_controller.dart';
 import 'package:hediaty/core/models/event.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class EventListPage extends StatefulWidget {
   @override
@@ -10,51 +11,54 @@ class EventListPage extends StatefulWidget {
 }
 
 class _EventListPageState extends State<EventListPage> {
-  Stream<List<Event>>? _eventStream;
-  List<Event> _sortedEvents = [];
-  bool _isLoading = true;
   String _sortBy = 'Name';
 
-  @override
-  void initState() {
-    super.initState();
-    _loadEvents();
+  String _getEventStatus(Event event) {
+    final now = DateTime.now();
+    final dayDifference = event.date.difference(now).inDays;
+
+    if (dayDifference < -1) return "Past";
+    if (dayDifference >= -1 && dayDifference <= 1) return "Current";
+    return "Upcoming";
   }
 
-  void _loadEvents() {
-    final eventController = Provider.of<EventController>(context, listen: false);
-    final String userId = FirebaseAuth.instance.currentUser!.uid;
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case "Upcoming":
+        return Colors.amber;
+      case "Current":
+        return Colors.green;
+      case "Past":
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
 
-    setState(() {
-      _eventStream = eventController.loadEvents(userId);
-      _isLoading = true;
-    });
+  void _sortEvents(List<Event> events) {
+    if (_sortBy == 'Name') {
+      events.sort((a, b) => a.name.compareTo(b.name));
+    } else if (_sortBy == 'Date') {
+      events.sort((a, b) => a.date.compareTo(b.date));
+    } else if (_sortBy == 'Status') {
+      events.sort((a, b) {
+        final statusA = _getEventStatus(a);
+        final statusB = _getEventStatus(b);
 
-    _eventStream!.listen((events) {
-      setState(() {
-        _sortedEvents = events;
-        _isLoading = false;
-        _sortEvents();
+        return statusA.compareTo(statusB);
       });
-    });
-  }
-
-  void _sortEvents() {
-    setState(() {
-      if (_sortBy == 'Name') {
-        _sortedEvents.sort((a, b) => a.name.compareTo(b.name));
-      } else {
-        _sortedEvents.sort((a, b) => a.date.compareTo(b.date));
-      }
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final eventController = Provider.of<EventController>(context, listen: false);
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'My Events',
           style: TextStyle(
             color: Color(0xFF2A6BFF),
@@ -73,11 +77,10 @@ class _EventListPageState extends State<EventListPage> {
                 onChanged: (value) {
                   setState(() {
                     _sortBy = value!;
-                    _sortEvents();
                   });
                 },
                 items: [
-                  DropdownMenuItem(
+                  const DropdownMenuItem(
                     value: 'Name',
                     child: Text(
                       'Sort by Name',
@@ -87,7 +90,7 @@ class _EventListPageState extends State<EventListPage> {
                       ),
                     ),
                   ),
-                  DropdownMenuItem(
+                  const DropdownMenuItem(
                     value: 'Date',
                     child: Text(
                       'Sort by Date',
@@ -97,9 +100,19 @@ class _EventListPageState extends State<EventListPage> {
                       ),
                     ),
                   ),
+                  const DropdownMenuItem(
+                    value: 'Status',
+                    child: Text(
+                      'Sort by Status',
+                      style: TextStyle(
+                        color: Color(0xFF333333),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
                 dropdownColor: Colors.white,
-                icon: Icon(
+                icon: const Icon(
                   Icons.sort,
                   color: Color(0xFF2A6BFF),
                 ),
@@ -108,81 +121,128 @@ class _EventListPageState extends State<EventListPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : _sortedEvents.isEmpty
-                ? Center(
-                    child: Text(
-                      'No events found. Tap + to create one.',
-                      style: TextStyle(
-                        color: Color(0xFF333333),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : ListView.separated(
-                    itemCount: _sortedEvents.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final event = _sortedEvents[index];
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xFFADD8E6),
-                              Colors.white,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ListTile(
-                          contentPadding: EdgeInsets.all(16),
-                          title: Text(
-                            event.name,
-                            style: TextStyle(
-                              color: Color(0xFF333333),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${event.location} - ${event.date.toLocal().toString().split(' ')[0]}',
-                            style: TextStyle(
-                              color: Color(0xFF666666),
-                              fontSize: 16,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.arrow_forward,
-                            color: Color(0xFF2A6BFF),
-                          ),
-                          onTap: () {
-                              final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-                              Navigator.pushNamed(
-                                context,
-                                '/event_details',
-                                arguments: {
-                                  'currentUserId': currentUserId, // Pass current user ID
-                                  'eventId': event.id,           // Pass event ID
-                                },
-                              );
-                            },
-                        ),
-                      );
-                    },
+      body: StreamBuilder<List<Event>>(
+        stream: eventController.loadEvents(userId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Error loading events: ${snapshot.error}",
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          final events = snapshot.data ?? [];
+
+          if (events.isEmpty) {
+            return const Center(
+              child: Text(
+                'No events found. Tap + to create one.',
+                style: TextStyle(
+                  color: Color(0xFF333333),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            );
+          }
+
+          _sortEvents(events);
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: events.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final event = events[index];
+              final status = _getEventStatus(event);
+              final statusColor = _getStatusColor(status);
+
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFADD8E6),
+                      Colors.white,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  title: Text(
+                    event.name,
+                    style: const TextStyle(
+                      color: Color(0xFF333333),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${event.location} - ${DateFormat('yyyy-MM-dd').format(event.date)}',
+                        style: const TextStyle(
+                          color: Color(0xFF666666),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              status,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward,
+                    color: Color(0xFF2A6BFF),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/event_details',
+                      arguments: {
+                        'currentUserId': userId,
+                        'eventId': event.id,
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, '/create_edit_event');
         },
-        backgroundColor: Color(0xFF2A6BFF),
-        child: Icon(
+        backgroundColor: const Color(0xFF2A6BFF),
+        child: const Icon(
           Icons.add,
           color: Colors.white,
         ),

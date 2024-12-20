@@ -21,7 +21,7 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
-  late DateTime date;
+  late DateTime _dateTime;
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
     _nameController.text = widget.event?.name ?? '';
     _locationController.text = widget.event?.location ?? '';
     _descriptionController.text = widget.event?.description ?? '';
-    date = widget.event?.date ?? DateTime.now();
+    _dateTime = widget.event?.date ?? DateTime.now();
   }
 
   @override
@@ -52,10 +52,10 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
       final event = Event(
         id: eventId,
         userId: FirebaseAuth.instance.currentUser!.uid,
-        name: _nameController.text,
-        date: date,
-        location: _locationController.text,
-        description: _descriptionController.text,
+        name: _nameController.text.trim(),
+        date: _dateTime,
+        location: _locationController.text.trim(),
+        description: _descriptionController.text.trim(),
       );
 
       if (widget.event == null) {
@@ -68,17 +68,33 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDateTime(BuildContext context) async {
+    // Select Date
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: date,
+      initialDate: _dateTime,
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-    if (picked != null && picked != date) {
-      setState(() {
-        date = picked;
-      });
+
+    if (pickedDate != null) {
+      // Select Time
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_dateTime),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _dateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
     }
   }
 
@@ -88,7 +104,7 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
       appBar: AppBar(
         title: Text(
           widget.event == null ? "Create Event" : "Edit Event",
-          style: TextStyle(
+          style: const TextStyle(
             color: Color(0xFF2A6BFF),
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -96,110 +112,124 @@ class _CreateEditEventPageState extends State<CreateEditEventPage> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2A6BFF)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: "Event Name",
-                  labelStyle: TextStyle(
-                    color: Color(0xFF333333),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFADD8E6)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFF2A6BFF)),
-                  ),
-                ),
-                validator: (value) => value!.isEmpty ? "Name is required" : null,
-              ),
-              SizedBox(height: 16),
-              InkWell(
-                onTap: () => _selectDate(context),
-                child: IgnorePointer(
-                  child: TextFormField(
-                    readOnly: true,
-                    controller: TextEditingController(
-                      text: DateFormat('yyyy-MM-dd').format(date)
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Event Name
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: "Event Name",
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF333333),
+                      fontWeight: FontWeight.bold,
                     ),
-                    decoration: InputDecoration(
-                      labelText: "Date",
-                      labelStyle: TextStyle(
-                        color: Color(0xFF333333),
-                        fontWeight: FontWeight.bold,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFFADD8E6)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFF2A6BFF)),
-                      ),
-                      suffixIcon: Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFF2A6BFF),
-                      ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFADD8E6)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF2A6BFF)),
                     ),
                   ),
+                  validator: (value) => value!.isEmpty ? "Name is required" : null,
                 ),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: InputDecoration(
-                  labelText: "Location",
-                  labelStyle: TextStyle(
-                    color: Color(0xFF333333),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFADD8E6)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFF2A6BFF)),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: "Description",
-                  labelStyle: TextStyle(
-                    color: Color(0xFF333333),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFADD8E6)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFF2A6BFF)),
+                const SizedBox(height: 16),
+
+                // Event Date and Time
+                InkWell(
+                  onTap: () => _selectDateTime(context),
+                  child: IgnorePointer(
+                    child: TextFormField(
+                      readOnly: true,
+                      controller: TextEditingController(
+                        text: DateFormat('yyyy-MM-dd hh:mm a').format(_dateTime),
+                      ),
+                      decoration: InputDecoration(
+                        labelText: "Date and Time",
+                        labelStyle: const TextStyle(
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFADD8E6)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF2A6BFF)),
+                        ),
+                        suffixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: Color(0xFF2A6BFF),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 24),
-              Center(
-                child: CustomButton(
-                  label: "Save",
-                  onPressed: _saveEvent,
+                const SizedBox(height: 16),
+
+                // Event Location
+                TextFormField(
+                  controller: _locationController,
+                  decoration: InputDecoration(
+                    labelText: "Location",
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF333333),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFADD8E6)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF2A6BFF)),
+                    ),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Location is required" : null,
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+
+                // Event Description
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: "Description",
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF333333),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFADD8E6)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF2A6BFF)),
+                    ),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Description is required" : null,
+                ),
+                const SizedBox(height: 24),
+
+                // Save Button
+                Center(
+                  child: CustomButton(
+                    label: "Save",
+                    onPressed: _saveEvent,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
