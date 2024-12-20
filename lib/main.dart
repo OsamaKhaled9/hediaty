@@ -41,7 +41,7 @@ import 'package:integration_test/integration_test.dart';
 import 'main.dart' as app; // Import your app's main.dart file
 
 void main() async {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  //IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   await NotificationService().initialize(); // Initialize notifications

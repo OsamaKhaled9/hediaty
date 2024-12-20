@@ -5,7 +5,13 @@ import 'package:hediaty/core/models/friend.dart';
 import 'package:provider/provider.dart';
 import 'package:hediaty/widgets/footer.dart';
 import 'package:hediaty/widgets/friend_list_item.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hediaty/controllers/event_controller.dart';
+import 'package:hediaty/controllers/user_controller.dart';
+import 'package:hediaty/controllers/gift_controller.dart';
+import 'package:hediaty/services/notification_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   @override
@@ -18,54 +24,218 @@ class _HomePageState extends State<HomePage> {
   final Color textColor = Color(0xFF333333);
 
   TextEditingController _searchController = TextEditingController();
+  StreamSubscription<void>? _notificationSubscription;
   bool _isSearching = false;
 
-  // Search logic
-  List<Friend> _filterFriends(String query, List<Friend> allFriends) {
-    if (query.isEmpty) {
-      return allFriends;
-    }
-    return allFriends
-        .where((friend) =>
-            friend.friendName.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+  List<Friend> _allFriends = [];
+  List<Friend> _filteredFriends = [];
+  List<Map<String, dynamic>> _notifications = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePage();
+    _initializeNotificationListener();
   }
+
+  Future<void> _initializePage() async {
+    final homeController = Provider.of<HomeController>(context, listen: false);
+    try {
+      var currentUser = await homeController.getCurrentUser();
+      if (currentUser != null) {
+        await _loadFriends(currentUser.id, homeController);
+      }
+    } catch (e) {
+      print("Error initializing page: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+void _initializeNotificationListener() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser != null) {
+    final currentUserId = currentUser.uid;
+
+    try {
+      // Listen for new notifications and store them
+      _notificationSubscription = GiftController()
+          .listenForNotifications(currentUserId)
+          .listen((notification) async {
+        final notificationData = notification as Map<String, dynamic>;
+
+        // Update the notifications list for the modal
+        setState(() {
+          _notifications.add(notificationData);
+        });
+
+        // Show the notification on the phone
+        await NotificationService().showNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID
+          title: notificationData['title'] ?? 'New Notification',
+          body: notificationData['message'] ?? 'You have a new notification',
+        );
+      }, onError: (error) {
+        print("Error while listening for notifications: $error");
+      });
+    } catch (e) {
+      print("Error during notification initialization: $e");
+    }
+  } else {
+    print("No user logged in, cannot start notification listener.");
+  }
+}
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    _searchController.dispose();
+    // Clear notifications on dispose instead of init
+    _clearNotifications();
+    super.dispose();
+  }
+
+  Future<void> _clearNotifications() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final notificationsRef = FirebaseFirestore.instance.collection('notifications');
+      final userNotifications = await notificationsRef
+          .where('recipientUserId', isEqualTo: currentUser.uid)
+          .get();
+
+      for (var doc in userNotifications.docs) {
+        await doc.reference.delete();
+      }
+    }
+  }
+
+  Future<void> _loadFriends(String userId, HomeController controller) async {
+    try {
+      List<Friend> friends = await controller.loadFriends(userId);
+      if (mounted) {
+        setState(() {
+          _allFriends = friends;
+          _filteredFriends = friends;
+        });
+      }
+    } catch (e) {
+      print("Error loading friends: $e");
+    }
+  }
+
+  // Improved search functionality with debouncing
+  Timer? _debounce;
+  void _filterFriends(String query, List<Friend> allFriends) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        if (query.isEmpty) {
+          _filteredFriends = allFriends;
+        } else {
+          _filteredFriends = allFriends
+              .where((friend) =>
+                  friend.friendName.toLowerCase().contains(query.toLowerCase()))
+              .toList();
+        }
+      });
+    });
+  }
+
+  void _showNotificationsModal(BuildContext context) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+
+  if (currentUser == null) return;
+
+  // Fetch notifications from Firestore
+  final notificationsRef = FirebaseFirestore.instance.collection('notifications');
+  final userNotifications = await notificationsRef
+      .where('recipientUserId', isEqualTo: currentUser.uid)
+      .orderBy('timestamp', descending: true)
+      .get();
+
+  final notifications = userNotifications.docs.map((doc) => doc.data()).toList();
+
+  // Show the modal
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: backgroundColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Notifications',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: notifications.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No notifications',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = notifications[index];
+                        final String notificationBody =
+                            notification['notificationBody'] ?? 'No Details';
+
+                        final Timestamp? timestamp =
+                            notification['timestamp'] as Timestamp?;
+
+                        final String formattedTime = timestamp != null
+                            ? DateTime.fromMillisecondsSinceEpoch(
+                                    timestamp.millisecondsSinceEpoch)
+                                .toLocal()
+                                .toString()
+                                .substring(0, 19) // Format the timestamp
+                            : 'Unknown time';
+
+                        return ListTile(
+                          leading: const Icon(Icons.notifications, color: Colors.blue),
+                          title: Text(
+                            notificationBody,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            formattedTime,
+                            style: const TextStyle(color: Colors.black45, fontSize: 12),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
     final homeController = Provider.of<HomeController>(context, listen: false);
+    final eventController = Provider.of<EventController>(context, listen: false);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: primaryColor,
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: "Search Friends",
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  border: InputBorder.none,
-                ),
-                onChanged: (query) {
-                  setState(() {}); // Trigger UI update on search
-                },
-              )
-            : Text("Home", style: TextStyle(color: Colors.white)),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) _searchController.clear();
-              });
-            },
-          ),
-        ],
-      ),
       body: FutureBuilder<user?>(
         future: homeController.getCurrentUser(),
         builder: (context, userSnapshot) {
@@ -73,50 +243,95 @@ class _HomePageState extends State<HomePage> {
             return Center(child: CircularProgressIndicator(color: primaryColor));
           }
           if (userSnapshot.hasError) {
-            return Center(
-                child: Text(
-              "Error: ${userSnapshot.error}",
-              style: TextStyle(color: Colors.red),
-            ));
+            return Center(child: Text("Error: ${userSnapshot.error}"));
           }
+          
           final currentUser = userSnapshot.data;
-
           if (currentUser == null) {
-            return Center(
-                child: Text(
-              "No user logged in.",
-              style: TextStyle(color: textColor),
-            ));
+            return Center(child: Text("No user logged in."));
           }
 
-          return Column(
-            children: [
-              _buildTopSection(currentUser),
-              Expanded(
-                child: StreamBuilder<List<Friend>>(
-                  stream: homeController.getFriendsStream(currentUser.id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                          child: CircularProgressIndicator(
-                              color: primaryColor));
-                    }
-                    if (snapshot.hasError) {
-                      return Center(
-                          child: Text(
-                        "Error loading friends: ${snapshot.error}",
-                        style: TextStyle(color: Colors.red),
-                      ));
-                    }
-                    final allFriends = snapshot.data ?? [];
-                    final filteredFriends =
-                        _filterFriends(_searchController.text, allFriends);
+          return FutureBuilder<List<Friend>>(
+            future: homeController.loadFriends(currentUser.id),
+            builder: (context, friendsSnapshot) {
+              if (friendsSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator(color: primaryColor));
+              }
+              if (friendsSnapshot.hasError) {
+                return Center(child: Text("Error loading friends: ${friendsSnapshot.error}"));
+              }
+              
+              final allFriends = friendsSnapshot.data ?? [];
+              if (_filteredFriends.isEmpty) {
+                _filteredFriends = allFriends;
+              }
 
-                    return _buildFriendsList(filteredFriends);
-                  },
-                ),
-              ),
-            ],
+              return Stack(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTopSection(currentUser, eventController),
+                      if (_isSearching) _buildSearchBar(allFriends),
+                      _buildFriendsList(allFriends),
+                    ],
+                  ),
+                  Positioned(
+                    top: 40,
+                    right: 16,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(_isSearching ? Icons.close : Icons.search,
+                              color: Colors.white),
+                          onPressed: () {
+                            setState(() {
+                              _isSearching = !_isSearching;
+                              if (!_isSearching) {
+                                _searchController.clear();
+                                _filteredFriends = allFriends;
+                              }
+                            });
+                          },
+                        ),
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.notifications, color: Colors.white),
+                              onPressed: () => _showNotificationsModal(context),
+                            ),
+                            if (_notifications.isNotEmpty)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  constraints: BoxConstraints(
+                                    minWidth: 14,
+                                    minHeight: 14,
+                                  ),
+                                  child: Text(
+                                    '${_notifications.length}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -129,96 +344,121 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTopSection(user currentUser) {
-    final eventController = Provider.of<EventController>(context, listen: false);
+  // Keep your existing _buildTopSection, _buildFriendsList, and _showAddFriendModal methods...
+  // [Previous implementations remain unchanged]
 
-    return StreamBuilder<int>(
-      stream: eventController.getEventCountStream(currentUser.id),
-      builder: (context, snapshot) {
-        return Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                primaryColor.withOpacity(0.8),
-                backgroundColor,
-              ],
+  Widget _buildTopSection(user currentUser, EventController eventController) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            primaryColor.withOpacity(0.8),
+            backgroundColor,
+          ],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: currentUser.profilePictureUrl.isNotEmpty
+                  ? AssetImage(currentUser.profilePictureUrl)
+                  : AssetImage("assets/images/default_avatar.JPG"),
             ),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+            SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: currentUser.profilePictureUrl.isNotEmpty
-                      ? AssetImage(currentUser.profilePictureUrl)
-                      : AssetImage("assets/images/default_avatar.JPG"),
+                Text(
+                  "Hello, ${currentUser.fullName}!",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
-                SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Hello, ${currentUser.fullName}!",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    snapshot.connectionState == ConnectionState.waiting
-                        ? Text("Loading events...",
-                            style: TextStyle(color: textColor))
-                        : snapshot.hasError
-                            ? Text("Error loading events",
-                                style: TextStyle(color: textColor))
-                            : Text(
-                                "You have ${snapshot.data ?? 0} events",
-                                style:
-                                    TextStyle(fontSize: 16, color: textColor),
-                              ),
-                  ],
+                SizedBox(height: 4),
+                FutureBuilder<int>(
+                  future: eventController.getEventCount(currentUser.id),
+                  builder: (context, eventSnapshot) {
+                    if (eventSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Text("Loading events...",
+                          style: TextStyle(color: textColor));
+                    }
+                    if (eventSnapshot.hasError) {
+                      return Text("Error loading events",
+                          style: TextStyle(color: textColor));
+                    }
+                    final eventCount = eventSnapshot.data ?? 0;
+                    return Text(
+                      "You have $eventCount events",
+                      style: TextStyle(fontSize: 16, color: textColor),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildFriendsList(List<Friend> friends) {
-    return friends.isEmpty
-        ? Center(
-            child: Text(
-              "No friends found",
-              style: TextStyle(color: textColor),
+ Widget _buildSearchBar(List<Friend> allFriends) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          labelText: "Search Friends",
+          labelStyle: TextStyle(color: primaryColor),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: primaryColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: primaryColor, width: 2),
+          ),
+          prefixIcon: Icon(Icons.search, color: primaryColor),
+        ),
+        style: TextStyle(color: textColor),
+        onChanged: (query) => _filterFriends(query, allFriends),
+      ),
+    );
+  }
+
+  Widget _buildFriendsList(List<Friend> allFriends) {
+    return Expanded(
+      child: _filteredFriends.isEmpty
+          ? Center(
+              child: Text(
+                "No friends found",
+                style: TextStyle(color: textColor),
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.only(top: 0),
+              itemCount: _filteredFriends.length,
+              itemBuilder: (context, index) {
+                return FriendListItem(friend: _filteredFriends[index]);
+              },
             ),
-          )
-        : ListView.builder(
-            padding: EdgeInsets.only(top: 0),
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              return StreamBuilder<int>(
-                stream: Provider.of<EventController>(context, listen: false)
-                    .getEventCountStream(friends[index].friendId),
-                builder: (context, snapshot) {
-                  final updatedFriend = friends[index];
-                  updatedFriend.upcomingEventsCount =
-                      snapshot.data ?? updatedFriend.upcomingEventsCount;
-                  return FriendListItem(friend: updatedFriend);
-                },
-              );
-            },
-          );
+    );
   }
 
   void _showAddFriendModal(BuildContext context, HomeController homeController) {
@@ -233,8 +473,7 @@ class _HomePageState extends State<HomePage> {
           future: homeController.getPotentialFriends(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                  child: CircularProgressIndicator(color: primaryColor));
+              return Center(child: CircularProgressIndicator(color: primaryColor));
             }
             if (snapshot.hasError) {
               return Center(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hediaty/controllers/user_controller.dart';
 import 'package:hediaty/core/models/gift.dart';
 import 'package:hediaty/services/firebase_service.dart';
 import 'package:hediaty/services/database_service.dart';
@@ -70,7 +71,13 @@ Future<void> updateGiftStatus(String giftId, String status, String? pledgedBy) a
           final currentUser = FirebaseAuth.instance.currentUser;
 
          if (currentUser != null) {
-              final userName = currentUser.displayName ?? currentUser.email ?? "Unknown User";
+                // Fetch the current user's fullName and update the displayName
+                // Fetch the full name of the user and store it locally
+                final userInstance = await FirebaseService().getUserById(currentUser.uid);
+
+                // Use the fullName from the fetched user or fallback options
+                final userName = userInstance?.fullName ?? currentUser.email ?? "Unknown User";
+                
               final notificationBody = status == "Pledged"
                   ? "$userName has pledged a gift!"
                   : "$userName has purchased a gift!";

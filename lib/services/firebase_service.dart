@@ -324,8 +324,7 @@ Future<user?> getCurrentUser() async {
     print("Error fetching user for ID $userId: $e");
     return null;
   }
-}
-
+     }
 
   Future<void> updateUser(user updatedUser) async {
     try {
